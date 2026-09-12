@@ -34,6 +34,20 @@ onMounted(async () => {
       })
       if (error) throw error
     }
+    // 2.5 Manual Hash Fragment Parse (fallback if auto-detection fails)
+    else if (route.hash.includes('access_token=')) {
+      const hashParams = new URLSearchParams(route.hash.substring(1))
+      const accessToken = hashParams.get('access_token')
+      const refreshToken = hashParams.get('refresh_token')
+      
+      if (accessToken && refreshToken) {
+        const { error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken
+        })
+        if (error) throw error
+      }
+    }
 
     // 3. Wait for session to settle (handles hash fragment access_token if present)
     let session = (await supabase.auth.getSession()).data.session
