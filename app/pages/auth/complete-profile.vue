@@ -49,7 +49,12 @@ async function handleSubmit() {
     const { loadProfile } = useProfile()
     await loadProfile()
 
-    router.push('/authenticated/dashboard')
+    // Refresh the user session so useSupabaseUser() gets the updated user_metadata
+    const supabase = useSupabaseClient()
+    await supabase.auth.refreshSession()
+
+    // Force a hard page reload to guarantee the Nuxt server and middleware read the new cookie
+    window.location.href = '/authenticated/dashboard'
   } catch (e: any) {
     errorMessage.value = e.data?.message || e.message || 'An unexpected error occurred'
   } finally {

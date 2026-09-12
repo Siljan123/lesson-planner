@@ -21,15 +21,4 @@ export default defineNuxtRouteMiddleware((to) => {
     return navigateTo('/authenticated/dashboard')
   }
 
-  // Logged in → check cached profile for completion (non-blocking)
-  if (!isPublicRoute && !isSetupRoute) {
-    const { profile } = useProfile()
-
-    // Only redirect if profile is already loaded AND incomplete.
-    // If profile hasn't been loaded yet, let the page render —
-    // the profile will be loaded by the layout's UserProfileDropdown.
-    if (profile.value && user.value.user_metadata?.profile_completed !== true) {
-      return navigateTo('/auth/complete-profile')
-    }
-  }
 })
