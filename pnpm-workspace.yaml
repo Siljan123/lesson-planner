@@ -1,0 +1,4 @@
+allowBuilds:
+  '@google/genai protobufjs': true
+  esbuild: true
+  vue-demi: true

@@ -1,0 +1,47 @@
+import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
+import type { Database } from '~~/shared/types/database.types'
+
+export default defineEventHandler(async (event) => {
+  const user = await serverSupabaseUser(event)
+  if (!user) {
+    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
+  }
+
+  const body = await readBody(event)
+
+  if (!body.full_name?.trim()) {
+    throw createError({ statusCode: 400, statusMessage: 'Full name is required' })
+  }
+  if (!body.password || body.password.length < 6) {
+    throw createError({ statusCode: 400, statusMessage: 'Password must be at least 6 characters' })
+  }
+
+  const supabase = await serverSupabaseClient<Database>(event)
+
+  const userId = (user as any).sub || user.id
+
+  // Update password and metadata via auth
+  const { error: authError } = await supabase.auth.updateUser({
+    password: body.password,
+    data: { profile_completed: true }
+  })
+  if (authError) {
+    throw createError({ statusCode: 400, statusMessage: authError.message })
+  }
+
+  // Update profile
+  const { data, error: profileError } = await supabase
+    .from('profiles')
+    .update({
+      full_name: body.full_name.trim(),
+    })
+    .eq('id', userId)
+    .select()
+    .single()
+
+  if (profileError) {
+    throw createError({ statusCode: 500, statusMessage: profileError.message })
+  }
+
+  return data
+})
