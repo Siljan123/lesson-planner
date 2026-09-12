@@ -7,6 +7,7 @@ const inviteSchema = z.object({
   full_name: z.string().min(1),
   role: z.enum(['admin', 'teacher']),
   school_id: z.string().optional().nullable(),
+  redirectTo: z.string().url().optional()
 })
 
 export default defineEventHandler(async (event) => {
@@ -27,11 +28,12 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Invalid input' })
   }
 
-  const { email, full_name, role, school_id } = body.data
+  const { email, full_name, role, school_id, redirectTo } = body.data
 
   // 1. Invite user
   const { data: inviteData, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email, {
-    data: { full_name }
+    data: { full_name },
+    redirectTo
   })
 
   if (inviteError) {

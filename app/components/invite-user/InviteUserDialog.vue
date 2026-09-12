@@ -26,7 +26,8 @@ async function onSubmit() {
       method: 'POST',
       body: {
         ...form.value,
-        school_id: form.value.school_id || null
+        school_id: form.value.school_id || null,
+        redirectTo: `${window.location.origin}/auth/confirm`
       }
     })
     emit('success')
