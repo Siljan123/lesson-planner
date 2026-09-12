@@ -17,13 +17,12 @@ export default defineEventHandler(async (event) => {
   }
 
   const supabase = await serverSupabaseClient<Database>(event)
-  const supabaseAdmin = serverSupabaseServiceRole<Database>(event)
   const userId = (user as any).sub || user.id
-
-  // Update password and metadata forcefully via Admin API
-  const { error: authError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+  
+  // Update password and metadata using the user's own session
+  const { error: authError } = await supabase.auth.updateUser({
     password: body.password,
-    user_metadata: { ...user.user_metadata, profile_completed: true }
+    data: { profile_completed: true }
   })
   if (authError) {
     throw createError({ statusCode: 400, message: authError.message })

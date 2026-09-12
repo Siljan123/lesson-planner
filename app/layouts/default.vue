@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import AppSidebar from '@/components/custom/AppSidebar.vue'
 import UserProfileDropdown from '@/components/custom/UserProfileDropdown.vue'
-import CompleteProfileModal from '@/components/custom/CompleteProfileModal.vue'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import { Separator } from '@/components/ui/separator'
 </script>
@@ -17,10 +16,9 @@ import { Separator } from '@/components/ui/separator'
         </div>
         <UserProfileDropdown />
       </header>
-      <main class="flex-1 min-w-0 bg-muted/20 p-4 md:p-8">
+      <main class="flex-1 bg-muted/20 p-4 md:p-8">
         <slot />
       </main>
     </SidebarInset>
-    <CompleteProfileModal />
   </SidebarProvider>
 </template>

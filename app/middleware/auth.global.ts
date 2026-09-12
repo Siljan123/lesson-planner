@@ -21,4 +21,17 @@ export default defineNuxtRouteMiddleware((to) => {
     return navigateTo('/authenticated/dashboard')
   }
 
+  // Logged in → check cached profile for completion (non-blocking)
+  if (!isPublicRoute && !isSetupRoute) {
+    const { profile } = useProfile()
+
+    // Only redirect if profile is already loaded AND incomplete.
+    // Escape hatch: If they logged in with a password (amr contains 'password'), they are already setup!
+    const hasPassword = user.value.amr?.some((a: any) => a.method === 'password')
+    const isProfileCompleted = user.value.user_metadata?.profile_completed === true
+
+    if (profile.value && !isProfileCompleted && !hasPassword) {
+      return navigateTo('/auth/complete-profile')
+    }
+  }
 })

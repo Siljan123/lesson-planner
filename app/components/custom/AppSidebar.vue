@@ -11,7 +11,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  useSidebar
+  useSidebar,
 } from '@/components/ui/sidebar'
 
 const route = useRoute()
@@ -85,8 +85,8 @@ const gaugeIconColor = computed(() => {
         <SidebarGroupContent>
           <SidebarMenu>
             <SidebarMenuItem v-for="item in navItems" :key="item.url">
-              <SidebarMenuButton as-child :is-active="route.path === item.url" :tooltip="item.title">
-                <NuxtLink :to="item.url" @click="setOpenMobile(false)">
+              <SidebarMenuButton as-child :is-active="route.path === item.url" :tooltip="item.title" @click="setOpenMobile(false)">
+                <NuxtLink :to="item.url">
                   <component :is="item.icon" />
                   <span>{{ item.title }}</span>
                 </NuxtLink>

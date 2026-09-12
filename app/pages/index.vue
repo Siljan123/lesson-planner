@@ -1,7 +1,25 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
+import { onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+
 definePageMeta({
   layout:'guest'
+})
+
+const router = useRouter()
+const route = useRoute()
+
+onMounted(() => {
+  // If the user lands here with auth tokens (e.g. from an invite link fallback),
+  // immediately redirect them to the confirm page to process the tokens.
+  if (route.query.code || route.query.token_hash || route.hash.includes('access_token=')) {
+    router.push({
+      path: '/auth/confirm',
+      query: route.query,
+      hash: route.hash
+    })
+  }
 })
 </script>
 
