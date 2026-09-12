@@ -10,10 +10,10 @@ export default defineEventHandler(async (event) => {
   const body = await readBody(event)
 
   if (!body.full_name?.trim()) {
-    throw createError({ statusCode: 400, statusMessage: 'Full name is required' })
+    throw createError({ statusCode: 400, message: 'Full name is required' })
   }
   if (!body.password || body.password.length < 6) {
-    throw createError({ statusCode: 400, statusMessage: 'Password must be at least 6 characters' })
+    throw createError({ statusCode: 400, message: 'Password must be at least 6 characters' })
   }
 
   const supabase = await serverSupabaseClient<Database>(event)
@@ -26,7 +26,7 @@ export default defineEventHandler(async (event) => {
     data: { profile_completed: true }
   })
   if (authError) {
-    throw createError({ statusCode: 400, statusMessage: authError.message })
+    throw createError({ statusCode: 400, message: authError.message })
   }
 
   // Update profile
