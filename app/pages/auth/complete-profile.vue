@@ -49,10 +49,6 @@ async function handleSubmit() {
     const { loadProfile } = useProfile()
     await loadProfile()
 
-    // Refresh auth session so user_metadata is updated on the client
-    const supabase = useSupabaseClient()
-    await supabase.auth.refreshSession()
-
     router.push('/authenticated/dashboard')
   } catch (e: any) {
     errorMessage.value = e.data?.message || e.message || 'An unexpected error occurred'
@@ -64,10 +60,10 @@ async function handleSubmit() {
 
 <template>
   <div class="min-h-screen flex items-center justify-center bg-muted/20 p-4">
-    <Card class="w-full max-w-md ">
+    <Card class="w-full max-w-md sm:border">
       <CardHeader class="space-y-2 text-center">
-        <div class="mx-auto flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-1">
-          <UserCheck class="size-6" />
+        <div class="mx-auto flex size-12 items-center justify-center text-primary mb-1">
+          <UserCheck class="size-12" />
         </div>
         <CardTitle class="text-2xl font-bold tracking-tight text-foreground">
           Complete Your Account

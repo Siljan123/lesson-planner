@@ -35,16 +35,20 @@ onMounted(async () => {
       if (error) throw error
     }
 
-    // 3. Wait briefly for session to settle (handles hash fragment access_token if present)
+    // 3. Wait for session to settle (handles hash fragment access_token if present)
     let session = (await supabase.auth.getSession()).data.session
-    if (!session) {
-      // Retry once after 1 second in case hash parsing is in progress
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+    let retries = 0
+    while (!session && retries < 10) {
+      await new Promise((resolve) => setTimeout(resolve, 500))
       session = (await supabase.auth.getSession()).data.session
+      retries++
     }
 
     if (!session) {
-      throw new Error('Unable to verify your account. The invite link may have expired or is invalid.')
+      const errorMsg = route.hash.includes('error_description') 
+        ? decodeURIComponent(route.hash.split('error_description=')[1]?.split('&')[0] || 'Unknown error')
+        : 'The invite link may have expired or is invalid.'
+      throw new Error('Unable to verify your account. ' + errorMsg)
     }
 
     status.value = 'success'

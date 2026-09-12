@@ -48,8 +48,8 @@ async function handleAuth() {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center ">
-    <Card class="w-full max-w-md border border-gray-200">
+  <div class="min-h-screen flex items-center justify-center p-2">
+    <Card class="w-full max-w-md sm:border border-gray-200">
       <CardHeader class="space-y-2 text-center">
         <div class="mx-auto flex size-12 items-centerxtext-primary mb-1">
           <GraduationCap class="size-12" />
