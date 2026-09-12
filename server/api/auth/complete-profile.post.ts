@@ -31,10 +31,10 @@ export default defineEventHandler(async (event) => {
   // Update profile
   const { data, error: profileError } = await supabase
     .from('profiles')
-    .upsert({
-      id: userId,
+    .update({
       full_name: body.full_name.trim(),
     })
+    .eq('id', userId)
     .select()
     .maybeSingle()
 
