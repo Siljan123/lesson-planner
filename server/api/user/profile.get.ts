@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
     .from('profiles')
     .select('id, full_name, role, created_at, updated_at')
     .eq('id', userId)
-    .single()
+    .maybeSingle()
 
   if (error) {
     throw createError({ statusCode: 500, statusMessage: error.message })

@@ -32,12 +32,12 @@ export default defineEventHandler(async (event) => {
   // Update profile
   const { data, error: profileError } = await supabase
     .from('profiles')
-    .update({
+    .upsert({
+      id: userId,
       full_name: body.full_name.trim(),
     })
-    .eq('id', userId)
     .select()
-    .single()
+    .maybeSingle()
 
   if (profileError) {
     throw createError({ statusCode: 500, statusMessage: profileError.message })

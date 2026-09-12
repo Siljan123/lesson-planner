@@ -20,7 +20,7 @@ export default defineEventHandler(async (event) => {
     .update(updates)
     .eq('id', userId)
     .select()
-    .single()
+    .maybeSingle()
 
   if (error) {
     throw createError({ statusCode: 500, statusMessage: error.message })
