@@ -100,7 +100,7 @@ function formatTokens(n: number): string {
   <div class="w-full overflow-x-auto">
     <svg
       :viewBox="`0 0 ${chartWidth} ${chartHeight}`"
-      class="w-full h-auto min-w-[400px]"
+      class="w-full h-auto min-w-[300px]"
       preserveAspectRatio="xMidYMid meet"
     >
       <!-- Y-axis grid lines and labels -->
