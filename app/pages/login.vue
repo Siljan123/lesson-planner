@@ -1,11 +1,18 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useSupabaseClient } from '#imports'
+import { ref, watch } from 'vue'
+import { useSupabaseClient, useSupabaseUser } from '#imports'
 import { Loader2, Mail, Lock, Eye, EyeOff, GraduationCap } from '@lucide/vue'
 import { useRouter } from 'vue-router'
 
 const supabase = useSupabaseClient()
+const user = useSupabaseUser()
 const router = useRouter()
+
+watch(user, () => {
+  if (user.value) {
+    router.push('/authenticated/dashboard')
+  }
+}, { immediate: true })
 
 definePageMeta({
   layout: 'guest'
@@ -37,7 +44,7 @@ async function handleAuth() {
         password: password.value,
       })
       if (error) throw error
-      router.push('/authenticated/dashboard')
+      // The redirect is handled by the watcher above!
     }
   } catch (e: any) {
     errorMessage.value = e.message

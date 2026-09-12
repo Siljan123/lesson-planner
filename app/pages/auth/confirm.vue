@@ -72,6 +72,14 @@ onMounted(async () => {
 
     await new Promise((resolve) => setTimeout(resolve, 600))
 
+    // Wait for Nuxt reactive user state to populate before routing to prevent middleware race conditions
+    const user = useSupabaseUser()
+    let waitRetries = 0
+    while (!user.value && waitRetries < 20) {
+      await new Promise((resolve) => setTimeout(resolve, 100))
+      waitRetries++
+    }
+
     // 5. Redirect to dashboard (setup modal will pop up if needed)
     router.push('/authenticated/dashboard')
   } catch (e: any) {

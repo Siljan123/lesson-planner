@@ -64,28 +64,28 @@ function formatDate(dateStr: string) {
 </script>
 
 <template>
-  <div class="space-y-5 px-6 md:px-12 lg:px-20 py-10">
-    <div class="flex items-center justify-between gap-3">
-      <div class="flex items-center gap-2">
-        <div class="relative">
+  <div class="space-y-5 py-6 max-w-full min-w-0">
+    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+        <div class="relative w-full sm:w-auto flex-1 min-w-[150px]">
           <Input
             v-model="search"
-            class="h-8 w-44 text-[13px] border-gray-200 rounded-md bg-transparent placeholder:text-gray-400 focus:ring-0 focus:border-gray-300"
+            class="h-8 w-full sm:w-44 text-[13px] border-gray-200 rounded-md bg-transparent placeholder:text-gray-400 focus:ring-0 focus:border-gray-300"
             placeholder="Filter lesson plans..."
           />
         </div>
-        <Button variant="outline" size="sm" class="h-8 gap-1.5 text-[13px] text-gray-600 border-gray-200 hover:bg-gray-50 font-normal">
+        <Button variant="outline" size="sm" class="h-8 gap-1.5 text-[13px] text-gray-600 border-gray-200 hover:bg-gray-50 font-normal shrink-0">
           <CircleDot class="size-3.5" />
           Status
         </Button>
-        <Button variant="outline" size="sm" class="h-8 gap-1.5 text-[13px] text-gray-600 border-gray-200 hover:bg-gray-50 font-normal">
+        <Button variant="outline" size="sm" class="h-8 gap-1.5 text-[13px] text-gray-600 border-gray-200 hover:bg-gray-50 font-normal shrink-0">
           <SlidersHorizontal class="size-3.5" />
           Subject
         </Button>
       </div>
       
-      <div class="flex items-center gap-2">
-        <Button variant="outline" size="sm" class="h-8 gap-1.5 text-[13px] text-gray-600 border-gray-200 hover:bg-gray-50 font-normal">
+      <div class="flex items-center gap-2 w-full md:w-auto md:justify-end">
+        <Button variant="outline" size="sm" class="h-8 gap-1.5 text-[13px] text-gray-600 border-gray-200 hover:bg-gray-50 font-normal shrink-0">
           <SlidersHorizontal class="size-3.5" />
           View
         </Button>

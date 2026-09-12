@@ -87,7 +87,6 @@ async function handleSubmit() {
               <Input
                 id="fullName"
                 v-model="fullName"
-                placeholder="Juan Dela Cruz"
                 required
                 class="pl-9"
               />
@@ -103,7 +102,6 @@ async function handleSubmit() {
                 id="password"
                 :type="showPassword ? 'text' : 'password'"
                 v-model="password"
-                placeholder="Minimum 6 characters"
                 required
                 class="pl-9 pr-10"
               />

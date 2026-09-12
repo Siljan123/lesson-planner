@@ -65,13 +65,12 @@ const progressBarBg = computed(() => {
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-6 max-w-full min-w-0">
     <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
       <div>
         <h2 class="text-2xl font-semibold tracking-tight">Dashboard</h2>
         <p class="text-muted-foreground text-sm">Overview of your lesson planning progress.</p>
       </div>
-      <AddSheet />
     </div>
 
     <!-- Summary Stats -->
@@ -130,8 +129,7 @@ const progressBarBg = computed(() => {
     </div>
 
     <!-- Charts & Actions Row -->
-    <div class="grid gap-6 lg:grid-cols-3">
-      <!-- Daily Token Usage Chart (takes 2 cols) -->
+    <div class="grid gap-3 sm:grid-cols-3">
       <Card class="lg:col-span-2">
         <CardHeader>
           <CardTitle class="flex items-center gap-2">
@@ -181,18 +179,17 @@ const progressBarBg = computed(() => {
             <p class="text-lg font-semibold">{{ hoursUntilReset }} hours</p>
           </div>
 
-          <!-- Status badge -->
           <div
-            class="rounded-md px-3 py-2 text-sm font-medium"
+            class="rounded-md px-3 py-2 w-full text-sm font-medium"
             :class="isLimitReached
               ? 'bg-red-500/10 text-red-600 dark:text-red-400'
               : isNearLimit
                 ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
                 : 'bg-green-500/10 text-green-600 dark:text-green-400'"
           >
-            <span v-if="isLimitReached">⚠️ Daily limit reached</span>
-            <span v-else-if="isNearLimit">⚡ Approaching daily limit</span>
-            <span v-else>✅ Usage is normal</span>
+            <span v-if="isLimitReached"> Daily limit reached</span>
+            <span v-else-if="isNearLimit"> Approaching daily limit</span>
+            <span v-else> Usage is normal</span>
           </div>
         </CardContent>
       </Card>
