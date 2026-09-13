@@ -61,8 +61,8 @@ const filteredData = computed(() => {
     return true
   }).sort((a, b) => {
     if (!sortColumn.value) return 0
-    const valA = a[sortColumn.value] || ''
-    const valB = b[sortColumn.value] || ''
+    const valA = a[sortColumn.value] ?? ''
+    const valB = b[sortColumn.value] ?? ''
     
     let result = 0
     if (valA < valB) result = -1
@@ -164,6 +164,24 @@ watch(pageSize, () => {
               </Button>
             </TableHead>
             <TableHead>School ID</TableHead>
+            <TableHead>
+              <Button variant="ghost" size="sm" class="-ml-3 h-8" @click="toggleSort('document_count')">
+                <span>Documents</span>
+                <ArrowDown v-if="sortColumn === 'document_count' && sortOrder === 'desc'" class="ml-2 h-4 w-4" />
+                <ArrowUp v-else-if="sortColumn === 'document_count' && sortOrder === 'asc'" class="ml-2 h-4 w-4" />
+                <ArrowUpDown v-else class="ml-2 h-4 w-4" />
+              </Button>
+            </TableHead>
+            <TableHead class="text-right">
+              <div class="flex justify-end">
+                <Button variant="ghost" size="sm" class="-mr-3 h-8" @click="toggleSort('total_tokens')">
+                  <span>Tokens</span>
+                  <ArrowDown v-if="sortColumn === 'total_tokens' && sortOrder === 'desc'" class="ml-2 h-4 w-4" />
+                  <ArrowUp v-else-if="sortColumn === 'total_tokens' && sortOrder === 'asc'" class="ml-2 h-4 w-4" />
+                  <ArrowUpDown v-else class="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            </TableHead>
             <TableHead class="text-right">
               <div class="flex justify-end">
                 <Button variant="ghost" size="sm" class="-mr-3 h-8" @click="toggleSort('created_at')">
@@ -195,6 +213,17 @@ watch(pageSize, () => {
             <TableCell>
               {{ user.school_id || '-' }}
             </TableCell>
+            <TableCell>
+              <div class="flex flex-col">
+                <span class="font-medium">{{ user.document_count || 0 }}</span>
+                <span v-if="user.document_kinds" class="text-xs text-muted-foreground truncate max-w-[150px]" :title="user.document_kinds">
+                  {{ user.document_kinds }}
+                </span>
+              </div>
+            </TableCell>
+            <TableCell class="text-right">
+              {{ user.total_tokens?.toLocaleString() || 0 }}
+            </TableCell>
             <TableCell class="text-right text-muted-foreground">
               {{ new Date(user.created_at).toLocaleDateString() }}
             </TableCell>
@@ -213,7 +242,7 @@ watch(pageSize, () => {
             </TableCell>
           </TableRow>
           <TableRow v-if="paginatedData.length === 0">
-            <TableCell colspan="5" class="h-24 text-center text-muted-foreground">
+            <TableCell colspan="7" class="h-24 text-center text-muted-foreground">
               No results.
             </TableCell>
           </TableRow>

@@ -9,7 +9,7 @@ import { Separator } from '@/components/ui/separator'
   <SidebarProvider>
     <AppSidebar />
     <SidebarInset>
-      <header class="flex h-16 sticky z-10 top-0 shrink-0 items-center justify-between border-b bg-card px-4">
+      <header class="flex h-16 sticky z-10 top-0 shrink-0 items-center justify-between border-b bg-card px-2">
         <div class="flex items-center gap-2">
           <SidebarTrigger class="-ml-1" />
           <Separator orientation="vertical" class="h-6" />

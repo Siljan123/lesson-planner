@@ -214,6 +214,16 @@ Return ONLY valid JSON matching this exact structure:
       "effective_strategies": "Most effective collaborative and inquiry strategies",
       "challenges_encountered": "Potential difficulties and mitigation strategies"
     },
+    "reflection_per_session": [
+      ${targetDays.map(d => `{
+        "day": "${d}",
+        "objectives_achieved": null,
+        "objectives_not_achieved_reason": "",
+        "mastery_count": "",
+        "total_count": "",
+        "teacher_notes": ""
+      }`).join(',\n      ')}
+    ],
     "remediation": "Structured re-teaching activity with simplified manipulatives",
     "enrichment": "Higher-order thinking challenge or peer coaching activity"
   }
@@ -322,6 +332,14 @@ Return ONLY valid JSON matching this exact structure:
           effective_strategies: isEnglish ? "Collaborative dyadic work, visual modeling, and tactile manipulatives proved most effective." : "Naging mabisa ang magkapares na gawain, biswal na pagmomodelo, at kongkretong kagamitan.",
           challenges_encountered: isEnglish ? "Varying pacing among learners; addressed through differentiated task options." : "Magkakaiba ang bilis ng pagkatuto; tinugunan ito sa pamamagitan ng angkop na pagpipilian sa gawain."
         },
+        reflection_per_session: targetDays.map(day => ({
+          day,
+          objectives_achieved: null,
+          objectives_not_achieved_reason: '',
+          mastery_count: '',
+          total_count: '',
+          teacher_notes: '',
+        })),
         remediation: isEnglish ? `Conduct small-group guided practice using simplified cards and tactile aids for targeted reinforcement.` : `Magsagawa ng gabay na pagsasanay sa maliit na pangkat gamit ang pinasimpleng card at kongkretong pantulong na kagamitan.`,
         enrichment: isEnglish ? `Provide advanced learners with a creative problem-solving extension challenge and peer-facilitator roles.` : `Bigyan ang mabilis matuto ng malikhaing hamon sa paglutas ng suliranin at tungkuling gumabay sa kapwa mag-aaral.`
       }

@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { useAsyncData } from '#imports'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { FileText, CheckCircle, FileEdit, Archive, Activity, ArrowRight, BarChart3, Gauge, Zap } from '@lucide/vue'
+import { FileText, CheckCircle, FileEdit, Archive, Activity, ArrowRight, BarChart3, Gauge, Zap, Timer, Coins, CalendarDays } from '@lucide/vue'
 import DocumentsCard from '@/components/documents/DocumentsCard.vue'
 import AddSheet from '@/components/lessonplan/AddSheet.vue'
 import TokenUsageChart from '@/components/custom/TokenUsageChart.vue'
@@ -114,7 +114,7 @@ const progressBarBg = computed(() => {
           <div class="text-2xl font-bold" :class="usageStatusColor">{{ percentUsed }}%</div>
           <div class="flex items-center justify-between mt-1">
             <p class="text-xs text-muted-foreground">
-              {{ formatTokens(usage?.used ?? 0) }} / {{ formatTokens(usage?.limit ?? 50000) }} tokens
+              {{ formatTokens(usage?.used ?? 0) }} / {{ formatTokens(usage?.limit ?? 200000) }} tokens
             </p>
           </div>
           <div class="h-1.5 rounded-full mt-2 overflow-hidden" :class="progressBarBg">
@@ -124,6 +124,48 @@ const progressBarBg = computed(() => {
               :style="{ width: `${Math.min(percentUsed, 100)}%` }"
             />
           </div>
+        </CardContent>
+      </Card>
+    </div>
+
+    <!-- AI Studio Limits Reference -->
+    <div class="grid gap-4 md:grid-cols-3">
+      <Card>
+        <CardHeader class="flex flex-row items-center justify-between pb-2 space-y-0">
+          <CardTitle class="text-sm font-medium">RPM (Requests Per Minute)</CardTitle>
+          <Timer class="w-4 h-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div class="text-2xl font-bold">15</div>
+          <p class="text-xs text-muted-foreground mt-1">
+            Max AI Studio requests per minute on free tier.
+          </p>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader class="flex flex-row items-center justify-between pb-2 space-y-0">
+          <CardTitle class="text-sm font-medium">TPM (Tokens Per Minute)</CardTitle>
+          <Coins class="w-4 h-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div class="text-2xl font-bold">1 Million</div>
+          <p class="text-xs text-muted-foreground mt-1">
+            Max tokens (words/pieces of words) processed per minute.
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader class="flex flex-row items-center justify-between pb-2 space-y-0">
+          <CardTitle class="text-sm font-medium">TPD (Tokens Per Day)</CardTitle>
+          <CalendarDays class="w-4 h-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div class="text-2xl font-bold">200K <span class="text-sm font-normal text-muted-foreground">(App Limit)</span></div>
+          <p class="text-xs text-muted-foreground mt-1">
+            AI Studio allows 1,500 requests/day. We limit to 200K tokens/day to prevent abuse.
+          </p>
         </CardContent>
       </Card>
     </div>

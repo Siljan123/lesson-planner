@@ -46,7 +46,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const DAILY_LIMIT = 50000
+  const DAILY_LIMIT = 200000
 
   const history = Array.from(dailyMap.entries()).map(([date, data]) => ({
     date,

@@ -92,6 +92,18 @@ export const DOC_I18N = {
     reflectionStrategies: 'Effective Strategies: ',
     reflectionChallenges: 'Challenges: ',
 
+    // Per-session reflection (DepEd DLL template)
+    reflectionLabel: 'Reflections:',
+    reflectionPrompt1: 'Think about what you need to change for the next session based on what happened today. Is there something the learners are interested in exploring?',
+    reflectionPrompt2: 'Are some things you would like to share with your co-teachers, parents, or school leaders about your classroom experience? What would you like your instructional coach to help you with?',
+    reflectionObjAchieved: '☐ The lesson objectives were achieved within the allotted time.',
+    reflectionObjNotAchieved: '☐ The lesson objectives were not achieved due to:',
+    reflectionReasonTime: '     ☐ lack of time',
+    reflectionReasonDifficulty: '     ☐ pupils\' difficulty in understanding the lesson',
+    reflectionReasonParticipation: '     ☐ limited participation and cooperation of some pupils',
+    reflectionMasteryCount: '___ out of ___ pupils got 80% in the assessment.',
+    reflectionTeacherNotes: 'Teacher notes / next steps: ___________________________________',
+
     // V. SIGNATORIES
     preparedBy: 'Prepared by:',
     checkedBy: 'Checked & reviewed by:',
@@ -160,6 +172,18 @@ export const DOC_I18N = {
     reflectionRemediation: 'Requiring Remediation: ',
     reflectionStrategies: 'Effective Strategies: ',
     reflectionChallenges: 'Challenges: ',
+
+    // Per-session reflection (DepEd DLL template)
+    reflectionLabel: 'Mga Pagninilay:',
+    reflectionPrompt1: 'Isipin kung ano ang kailangan mong baguhin para sa susunod na sesyon batay sa nangyari ngayon. May gustong galugarin pa ba ang mga mag-aaral?',
+    reflectionPrompt2: 'May nais ka bang ibahagi sa iyong mga katuwang na guro, magulang, o mga pinuno ng paaralan tungkol sa iyong karanasan sa silid-aralan? Ano ang gusto mong matulungan ka ng iyong instructional coach?',
+    reflectionObjAchieved: '☐ Naabot ang mga layunin ng aralin sa loob ng itinakdang oras.',
+    reflectionObjNotAchieved: '☐ Hindi naabot ang mga layunin ng aralin dahil sa:',
+    reflectionReasonTime: '     ☐ kakulangan ng oras',
+    reflectionReasonDifficulty: '     ☐ kahirapan ng mga mag-aaral na maunawaan ang aralin',
+    reflectionReasonParticipation: '     ☐ limitadong partisipasyon at kooperasyon ng ilang mag-aaral',
+    reflectionMasteryCount: '___ sa ___ na mag-aaral ang nakakuha ng 80% sa pagtataya.',
+    reflectionTeacherNotes: 'Mga tala ng guro / susunod na hakbang: ___________________________________',
 
     // V. SIGNATORIES
     preparedBy: 'Prepared by:',
@@ -599,53 +623,24 @@ export async function exportDocx(plan: LessonPlan, langOverride?: string): Promi
                 })
               ]
             }),
-            new TableRow({
-              children: [
-                new TableCell({
-                  width: { size: labelColWidth, type: WidthType.PERCENTAGE },
-                  margins: cellMargins,
-                  children: [
-                    new Paragraph({
-                      children: [
-                        new TextRun({ text: t.reflection, bold: true, size: 18 }),
-                        new TextRun({ break: 1, text: t.reflectionSub, italics: true, size: 15, color: "555555" })
-                      ]
-                    })
-                  ]
-                }),
-                new TableCell({
-                  columnSpan: totalCols - 1,
-                  margins: cellMargins,
-                  children: [
-                    new Paragraph({
-                      children: [
-                        new TextRun({ text: t.reflectionMastery, bold: true, size: 17 }),
-                        new TextRun({ text: plan.content.ways_forward?.reflection?.learners_at_mastery || "", size: 17 })
-                      ],
-                      spacing: { after: 60 }
-                    }),
-                    new Paragraph({
-                      children: [
-                        new TextRun({ text: t.reflectionRemediation, bold: true, size: 17 }),
-                        new TextRun({ text: plan.content.ways_forward?.reflection?.learners_requiring_remediation || "", size: 17 })
-                      ],
-                      spacing: { after: 60 }
-                    }),
-                    new Paragraph({
-                      children: [
-                        new TextRun({ text: t.reflectionStrategies, bold: true, size: 17 }),
-                        new TextRun({ text: plan.content.ways_forward?.reflection?.effective_strategies || "", size: 17 })
-                      ],
-                      spacing: { after: 60 }
-                    }),
-                    new Paragraph({
-                      children: [
-                        new TextRun({ text: t.reflectionChallenges, bold: true, size: 17 }),
-                        new TextRun({ text: plan.content.ways_forward?.reflection?.challenges_encountered || "", size: 17 })
-                      ]
-                    })
-                  ]
-                })
+            createSessionHeadersRow(),
+            createMultiColRow(t.reflectionLabel, '', (session) => {
+              const reflectionData = (plan.content.ways_forward?.reflection_per_session || []).find((r: any) => r.day === session.day)
+              const masteryCount = reflectionData?.mastery_count || '___'
+              const totalCount = reflectionData?.total_count || '___'
+              const teacherNotes = reflectionData?.teacher_notes || ''
+              const masteryLine = t.reflectionMasteryCount.replace('___', masteryCount).replace('___', totalCount)
+
+              return [
+                new Paragraph({ children: [new TextRun({ text: t.reflectionPrompt1, italics: true, size: 15, color: "555555" })], spacing: { after: 100 } }),
+                new Paragraph({ children: [new TextRun({ text: t.reflectionPrompt2, italics: true, size: 15, color: "555555" })], spacing: { after: 160 } }),
+                new Paragraph({ children: [new TextRun({ text: t.reflectionObjAchieved, size: 16 })], spacing: { after: 60 } }),
+                new Paragraph({ children: [new TextRun({ text: t.reflectionObjNotAchieved, size: 16 })], spacing: { after: 40 } }),
+                new Paragraph({ children: [new TextRun({ text: t.reflectionReasonTime, size: 15 })], spacing: { after: 40 } }),
+                new Paragraph({ children: [new TextRun({ text: t.reflectionReasonDifficulty, size: 15 })], spacing: { after: 40 } }),
+                new Paragraph({ children: [new TextRun({ text: t.reflectionReasonParticipation, size: 15 })], spacing: { after: 80 } }),
+                new Paragraph({ children: [new TextRun({ text: masteryLine, size: 16 })], spacing: { after: 80 } }),
+                new Paragraph({ children: [new TextRun({ text: teacherNotes ? `Teacher notes / next steps: ${teacherNotes}` : t.reflectionTeacherNotes, size: 16 })], spacing: { after: 40 } }),
               ]
             }),
 

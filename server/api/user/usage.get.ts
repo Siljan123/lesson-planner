@@ -34,7 +34,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Define daily token limit per user
-  const DAILY_LIMIT = 50000 
+  const DAILY_LIMIT = 200000 
 
   // Reset time is start of next day (UTC)
   const resetTime = new Date(startOfDay)

@@ -65,6 +65,14 @@ export interface IlawContent {
       effective_strategies?: string;
       challenges_encountered?: string;
     };
+    reflection_per_session?: {
+      day: string;
+      objectives_achieved?: boolean | null;
+      objectives_not_achieved_reason?: string;
+      mastery_count?: string;
+      total_count?: string;
+      teacher_notes?: string;
+    }[];
     remediation?: string;
     enrichment?: string;
     extended_learning?: string;

@@ -52,6 +52,23 @@ import {
 
 const route = useRoute()
 const router = useRouter()
+const { deletePlan } = useLessonPlans()
+
+const isDeleting = ref(false)
+
+const handleDelete = async () => {
+  if (confirm(`Are you sure you want to delete this lesson plan?\nThis action cannot be undone.`)) {
+    isDeleting.value = true
+    try {
+      await deletePlan(route.params.id as string)
+      router.push('/authenticated/generated-lesson-plan')
+    } catch (err) {
+      console.error(err)
+      alert('Failed to delete lesson plan')
+      isDeleting.value = false
+    }
+  }
+}
 const planId = computed(() => route.params.id as string)
 
 // Fetch Plan Data
@@ -387,7 +404,7 @@ const triggerPrint = () => {
       </div>
 
       <!-- Action Buttons -->
-      <div class="flex items-center gap-2.5">
+      <div class="sm:flex items-center  gap-2.5">
         <!-- Status Switcher -->
         <div class="flex items-center gap-1.5">
           <span class="text-xs text-muted-foreground hidden sm:inline">Status:</span>
@@ -453,6 +470,19 @@ const triggerPrint = () => {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        <!-- Delete Button -->
+        <Button
+          size="sm"
+          variant="outline"
+          class="gap-1.5 font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+          :disabled="isDeleting"
+          @click="handleDelete"
+        >
+          <Loader2 v-if="isDeleting" class="size-3.5 animate-spin" />
+          <Trash2 v-else class="size-3.5" />
+          <span class="hidden sm:inline">Delete</span>
+        </Button>
 
         <!-- Print Button -->
         <Button

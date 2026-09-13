@@ -5,19 +5,99 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem, SelectSeparator } from '@/components/ui/select'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet'
-import { Loader2, Sparkles, RotateCw } from '@lucide/vue'
+import { Loader2, Sparkles, RotateCw, Plus, PlusCircle, X, AlertCircle } from '@lucide/vue'
 
 const props = defineProps<{ open: boolean; plan: any }>()
 const emit = defineEmits(['update:open', 'updated'])
-const { fetchSubjects, fetchGrades } = useReferenceData()
+const { fetchSubjects, createSubject, fetchGrades } = useReferenceData()
 const { updatePlan, regeneratePlan } = useLessonPlans()
-const { data: subjects } = useAsyncData('subjects-edit', async () => await fetchSubjects() as any[], { lazy: true })
+const { data: subjects, refresh: refreshSubjects } = useAsyncData('subjects-edit', async () => await fetchSubjects() as any[], { lazy: true })
 const { data: grades } = useAsyncData('grades-edit', async () => await fetchGrades() as any[], { lazy: true })
 const isUpdating = ref(false)
 const isRegeneratingObjectives = ref(false)
 const isRegeneratingPlan = ref(false)
+
+const isCreatingSubject = ref(false)
+const isSavingSubject = ref(false)
+const isCodeManuallyEdited = ref(false)
+const newSubjectName = ref('')
+const newSubjectCode = ref('')
+const customSubjectError = ref('')
+
+function onSubjectNameInput() {
+  customSubjectError.value = ''
+  if (!isCodeManuallyEdited.value) {
+    const name = newSubjectName.value.trim()
+    if (!name) {
+      newSubjectCode.value = ''
+      return
+    }
+    const words = name.split(/\s+/).filter(Boolean)
+    if (words.length > 1) {
+      newSubjectCode.value = words.map(w => w[0]).join('').toUpperCase()
+    } else {
+      newSubjectCode.value = name.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 8)
+    }
+  }
+}
+
+function onSubjectCodeInput() {
+  isCodeManuallyEdited.value = true
+}
+
+function openCreateSubject() {
+  isCreatingSubject.value = true
+  isCodeManuallyEdited.value = false
+  newSubjectName.value = ''
+  newSubjectCode.value = ''
+  customSubjectError.value = ''
+}
+
+function cancelCreateSubject() {
+  isCreatingSubject.value = false
+  newSubjectName.value = ''
+  newSubjectCode.value = ''
+  customSubjectError.value = ''
+}
+
+function onSubjectChange(val: unknown) {
+  if (val === '__new_custom__') {
+    form.value.subject_id = ''
+    openCreateSubject()
+    return
+  }
+}
+
+async function handleCreateSubject() {
+  const name = newSubjectName.value.trim()
+  if (!name) {
+    customSubjectError.value = 'Please enter a subject name.'
+    return
+  }
+  try {
+    isSavingSubject.value = true
+    customSubjectError.value = ''
+    const result = await createSubject({
+      name,
+      code: newSubjectCode.value.trim() || undefined
+    })
+
+    if (subjects.value && !subjects.value.some((s: any) => s.id === result.id)) {
+      subjects.value.push(result)
+    }
+    await refreshSubjects()
+
+    form.value.subject_id = result.id
+    isCreatingSubject.value = false
+  } catch (err: any) {
+    console.error('Failed to create custom subject', err)
+    customSubjectError.value = err?.data?.statusMessage || err?.message || 'Failed to create subject'
+  } finally {
+    isSavingSubject.value = false
+  }
+}
 
 const form = ref({
   title: '',
@@ -158,13 +238,102 @@ async function onSubmit() {
           </div>
           <div class="grid gap-4 sm:grid-cols-2">
             <div class="space-y-2">
-              <Label>Subject</Label>
-              <Select v-model="form.subject_id">
+              <div class="flex items-center justify-between">
+                <Label>Subject</Label>
+                <Button
+                  v-if="!isCreatingSubject"
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  class="h-6 px-1.5 text-xs text-primary hover:text-primary/80 gap-1 font-normal"
+                  @click="openCreateSubject"
+                >
+                  <Plus class="size-3" />
+                  <span>Add Custom</span>
+                </Button>
+              </div>
+
+              <!-- Inline Custom Subject Creator -->
+              <div v-if="isCreatingSubject" class="rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-2.5">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                    <PlusCircle class="size-3.5 text-primary" /> Create Subject
+                  </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    class="size-5 text-muted-foreground hover:text-foreground"
+                    @click="cancelCreateSubject"
+                  >
+                    <X class="size-3" />
+                  </Button>
+                </div>
+                <div class="space-y-1.5">
+                  <div>
+                    <Label class="text-[11px] text-muted-foreground font-medium">Subject Name *</Label>
+                    <Input
+                      v-model="newSubjectName"
+                      placeholder="e.g. Creative Writing"
+                      class="h-8 text-xs bg-background mt-0.5"
+                      @input="onSubjectNameInput"
+                      @keydown.enter.prevent="handleCreateSubject"
+                    />
+                  </div>
+                  <div>
+                    <Label class="text-[11px] text-muted-foreground font-medium">Subject Code / Abbr</Label>
+                    <Input
+                      v-model="newSubjectCode"
+                      placeholder="e.g. CW"
+                      class="h-8 text-xs bg-background uppercase mt-0.5"
+                      @input="onSubjectCodeInput"
+                      @keydown.enter.prevent="handleCreateSubject"
+                    />
+                  </div>
+                </div>
+                <div v-if="customSubjectError" class="text-[11px] text-destructive flex items-center gap-1">
+                  <AlertCircle class="size-3 shrink-0" />
+                  <span>{{ customSubjectError }}</span>
+                </div>
+                <div class="flex items-center justify-end gap-1.5 pt-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    class="h-7 text-xs"
+                    :disabled="isSavingSubject"
+                    @click="cancelCreateSubject"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    class="h-7 text-xs gap-1.5"
+                    :disabled="!newSubjectName.trim() || isSavingSubject"
+                    @click="handleCreateSubject"
+                  >
+                    <Loader2 v-if="isSavingSubject" class="size-3 animate-spin" />
+                    <Plus v-else class="size-3" />
+                    <span>{{ isSavingSubject ? 'Saving...' : 'Save & Select' }}</span>
+                  </Button>
+                </div>
+              </div>
+
+              <!-- Subject Select -->
+              <Select v-else v-model="form.subject_id" @update:model-value="onSubjectChange">
                 <SelectTrigger>
                   <SelectValue placeholder="Select subject" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem v-for="subject in subjects" :key="subject.id" :value="subject.id">{{ subject.name }}</SelectItem>
+                  <SelectSeparator />
+                  <SelectItem value="__new_custom__" class="text-primary font-medium focus:text-primary focus:bg-primary/10">
+                    <div class="flex items-center gap-1.5 py-0.5">
+                      <Plus class="size-3.5" />
+                      <span>+ Create custom subject...</span>
+                    </div>
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>

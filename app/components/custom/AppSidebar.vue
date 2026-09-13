@@ -11,6 +11,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarSeparator,
   useSidebar,
 } from '@/components/ui/sidebar'
 
@@ -18,18 +19,17 @@ const route = useRoute()
 const { roleName } = useProfile()
 const { setOpenMobile } = useSidebar()
 
-const navItems = computed(() => {
-  const items = [
-    { title: 'Dashboard', url: '/authenticated/dashboard', icon: LayoutDashboard },
-    { title: 'Lesson Plans', url: '/authenticated/generated-lesson-plan', icon: FilePlus2 },
-    { title: 'Documents', url: '/authenticated/documents', icon: FileArchive },
+const navItems = [
+  { title: 'Dashboard', url: '/authenticated/dashboard', icon: LayoutDashboard },
+  { title: 'Lesson Plans', url: '/authenticated/generated-lesson-plan', icon: FilePlus2 },
+  { title: 'Documents', url: '/authenticated/documents', icon: FileArchive },
+]
+
+const adminItems = computed(() => {
+  if (roleName.value !== 'admin') return []
+  return [
+    { title: 'Users', url: '/authenticated/invite-user', icon: Users2Icon },
   ]
-
-  if (roleName.value === 'admin') {
-    items.push({ title: 'Users', url: '/authenticated/invite-user', icon: Users2Icon })
-  }
-
-  return items
 })
 
 const { usage, percentUsed, remainingPlans, hoursUntilReset, isNearLimit, isLimitReached, usageColor, fetchUsage, startPolling } = useUsage()
@@ -95,6 +95,24 @@ const gaugeIconColor = computed(() => {
           </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>
+
+      <template v-if="adminItems.length">
+        <SidebarSeparator />
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem v-for="item in adminItems" :key="item.url">
+                <SidebarMenuButton as-child :is-active="route.path === item.url" :tooltip="item.title" @click="setOpenMobile(false)">
+                  <NuxtLink :to="item.url">
+                    <component :is="item.icon" />
+                    <span>{{ item.title }}</span>
+                  </NuxtLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </template>
     </SidebarContent>
 
     <!-- Token Usage Footer -->

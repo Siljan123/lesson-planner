@@ -28,11 +28,18 @@ export const useLessonPlans = () => {
     })
   }
 
+  const deletePlan = async (id: string) => {
+    return await $fetch(`/api/lesson-plans/${id}`, {
+      method: 'DELETE'
+    })
+  }
+
   return {
     fetchAll,
     fetchStats,
     generatePlan,
     updatePlan,
-    regeneratePlan
+    regeneratePlan,
+    deletePlan
   }
 }
