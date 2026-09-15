@@ -6,15 +6,15 @@ export function parseSessionDays(duration?: string | null): string[] {
   // If numeric e.g. "2" or "2 days" or "3 sessions"
   const numMatch = trimmed.match(/^(\d+)\s*(?:days?|sessions?)?$/i);
   if (numMatch) {
-    const count = Math.min(Math.max(parseInt(numMatch[1], 10), 1), 7);
+    const count = Math.min(Math.max(parseInt(numMatch[1]!, 10), 1), 7);
     return Array.from({ length: count }, (_, i) => `Day ${i + 1}`);
   }
 
   // If range e.g. "Day 1 - Day 4" or "Day 1 to Day 3"
   const rangeMatch = trimmed.match(/day\s*(\d+)\s*(?:-|to)\s*day\s*(\d+)/i);
   if (rangeMatch) {
-    const start = parseInt(rangeMatch[1], 10);
-    const end = parseInt(rangeMatch[2], 10);
+    const start = parseInt(rangeMatch[1]!, 10);
+    const end = parseInt(rangeMatch[2]!, 10);
     if (start <= end && end - start < 7) {
       const days: string[] = [];
       for (let i = start; i <= end; i++) days.push(`Day ${i}`);
@@ -25,7 +25,7 @@ export function parseSessionDays(duration?: string | null): string[] {
   // If "Day 2", "Day 3", etc. (teacher input "Day 2" meaning 2 days or Day 1 and Day 2)
   const singleDayMatch = trimmed.match(/^day\s*(\d+)$/i);
   if (singleDayMatch) {
-    const count = parseInt(singleDayMatch[1], 10);
+    const count = parseInt(singleDayMatch[1]!, 10);
     if (count > 1) {
       return Array.from({ length: count }, (_, i) => `Day ${i + 1}`);
     }

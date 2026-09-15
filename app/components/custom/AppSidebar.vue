@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { LayoutDashboard, FilePlus2, FileArchive, Gauge, AlertTriangle, Users2Icon } from '@lucide/vue'
+import { LayoutDashboard, FilePlus2, FileArchive, BookOpen, Gauge, AlertTriangle, Users2Icon } from '@lucide/vue'
 import {
   Sidebar,
   SidebarContent,
@@ -22,7 +22,7 @@ const { setOpenMobile } = useSidebar()
 const navItems = [
   { title: 'Dashboard', url: '/authenticated/dashboard', icon: LayoutDashboard },
   { title: 'Lesson Plans', url: '/authenticated/generated-lesson-plan', icon: FilePlus2 },
-  { title: 'Documents', url: '/authenticated/documents', icon: FileArchive },
+  { title: 'Worksheets', url: '/authenticated/worksheets', icon: BookOpen },
 ]
 
 const adminItems = computed(() => {

@@ -3,7 +3,6 @@ import { computed } from 'vue'
 import { useAsyncData } from '#imports'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { FileText, CheckCircle, FileEdit, Archive, Activity, ArrowRight, BarChart3, Gauge, Zap, Timer, Coins, CalendarDays } from '@lucide/vue'
-import DocumentsCard from '@/components/documents/DocumentsCard.vue'
 import AddSheet from '@/components/lessonplan/AddSheet.vue'
 import TokenUsageChart from '@/components/custom/TokenUsageChart.vue'
 
@@ -262,9 +261,6 @@ const progressBarBg = computed(() => {
           </div>
         </CardContent>
       </Card>
-
-      <!-- Documents Card -->
-      <DocumentsCard />
     </div>
   </div>
 </template>
