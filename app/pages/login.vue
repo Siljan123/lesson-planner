@@ -1,12 +1,19 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useSupabaseClient } from '#imports'
+import { ref, watch, onMounted } from 'vue'
+import { useSupabaseClient, useSupabaseUser, navigateTo, useRouter, useRoute } from '#imports'
 import { Loader2, Mail, Lock, Eye, EyeOff, GraduationCap } from '@lucide/vue'
-import { useRouter } from 'vue-router'
 
 const supabase = useSupabaseClient()
+const user = useSupabaseUser()
 const router = useRouter()
 const route = useRoute()
+
+// Automatically navigate once the user state is populated
+watch(user, (currentUser) => {
+  if (currentUser) {
+    navigateTo('/authenticated/dashboard')
+  }
+}, { immediate: true })
 
 onMounted(() => {
   if (route.query.code || route.query.token_hash || route.hash.includes('access_token=')) {
@@ -42,17 +49,19 @@ async function handleAuth() {
       if (error) throw error
       alert('Sign up successful! You can now log in.')
       isSignUp.value = false
+      isLoading.value = false
     } else {
       const { error } = await supabase.auth.signInWithPassword({
         email: email.value,
         password: password.value,
       })
       if (error) throw error
-      router.push('/authenticated/dashboard')
+      if (user.value) {
+        await navigateTo('/authenticated/dashboard')
+      }
     }
   } catch (e: any) {
     errorMessage.value = e.message
-  } finally {
     isLoading.value = false
   }
 }
