@@ -12,7 +12,6 @@ import { GraduationCap, Heart, ShieldCheck, FileText, Sparkles } from '@lucide/v
         <div class="flex items-center gap-6">
           <NuxtLink to="/login" class="hover:text-foreground transition-colors">Privacy</NuxtLink>
           <NuxtLink to="/login" class="hover:text-foreground transition-colors">Terms of Service</NuxtLink>
-          <NuxtLink to="/login" class="hover:text-foreground transition-colors">DepEd Guidelines</NuxtLink>
         </div>
       </div>
     </div>
