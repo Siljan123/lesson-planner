@@ -170,16 +170,15 @@ onUnmounted(() => {
          Tired of Manual Encoding Your DLL?
         </h2>
         <p class="text-base text-muted-foreground">
-          Experience exactly how Lesson Plan AI synthesizes DepEd competencies, structures the ILAW framework, and drafts multi-day classroom activities in real time.
+          Experience exactly how AI synthesizes DepEd competencies, structures the ILAW framework, and drafts DLL activities in real time.
         </p>
       </div>
       <div class="grid gap-8 lg:grid-cols-[1.15fr_.85fr] items-start">
-        <!-- LEFT: Official DepEd DLL Document Table Template Preview -->
         <div class="rounded-md border overflow-hidden flex flex-col">
           <!-- Document Header Bar -->
           <div
             ref="tableScrollContainer"
-            class="overflow-auto bg-white p-4 sm:p-6 text-black font-serif max-h-[580px] select-text scroll-smooth"
+            class="overflow-auto bg-white p-4 sm:p-6 text-black font-serif max-h-145 select-text scroll-smooth"
             @mouseenter="isHovered = true"
             @mouseleave="isHovered = false"
             @touchstart="isHovered = true"

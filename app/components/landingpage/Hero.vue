@@ -28,7 +28,6 @@ function scrollToPreview() {
         </div>
         <div class="flex flex-col leading-none">
           <span class="text-base text-foreground font-bold">Lesson Plan AI</span>
-          <span class="text-[10px] text-muted-foreground font-medium tracking-wider uppercase">DepEd MATATAG</span>
         </div>
       </NuxtLink>
 
@@ -55,14 +54,6 @@ function scrollToPreview() {
     </div>
 
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8">
-      <!-- DepEd Order & MATATAG Compliance Pill -->
-      <div class="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/5 px-4 py-1.5 text-xs font-medium text-primary shadow-xs">
-        <Sparkles class="size-3.5 shrink-0" />
-        <span>DepEd Order No. 3, s. 2026 Compliant</span>
-        <span class="text-primary/40">•</span>
-        <span class="font-semibold">MATATAG Curriculum Aligned</span>
-      </div>
-
       <!-- Headline -->
       <h1 class="text-4xl sm:text-6xl font-extrabold tracking-tight text-foreground leading-[1.15]">
         The smart way to build your <br class="hidden sm:inline" />
@@ -76,18 +67,8 @@ function scrollToPreview() {
 
       <!-- Subtitle -->
       <p class="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-        Automate your teaching workflow. Generate complete, DepEd-standard ILAW lesson plans with differentiated activities, multi-day session pacing, and one-click DOCX &amp; PPTX exports.
+        Automate your teaching workflow. Generate complete, DepEd-standard ILAW lesson plans with differentiated activities, multi-day session pacing, and one-click DOCs exports.
       </p>
-
-      <!-- Action Buttons -->
-      <div class="flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-2">
-        <Button size="lg" as-child class="h-11 px-7 text-sm font-semibold shadow-md gap-2 w-full sm:w-auto">
-          <NuxtLink to="/login">
-            <span>Start Generating Free</span>
-            <ArrowRight class="size-4" />
-          </NuxtLink>
-        </Button>
-      </div>
 
       <!-- Key Trust Badges -->
       <div class="pt-8 grid grid-cols-2 md:grid-cols-3 gap-4 max-w-4xl mx-auto text-left">
@@ -116,7 +97,7 @@ function scrollToPreview() {
             <FileDown class="size-4" />
           </div>
           <div class="text-xs">
-            <p class="font-semibold text-foreground">Word &amp; Slides Export</p>
+            <p class="font-semibold text-foreground">Word &amp; Worksheets</p>
             <p class="text-muted-foreground text-[11px]">Ready-to-print .docx &amp; .pptx</p>
           </div>
         </div>
