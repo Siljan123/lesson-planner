@@ -11,6 +11,10 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, message: 'Unauthorized' })
   }
 
+  if (!id) {
+    throw createError({ statusCode: 400, message: 'Missing worksheet ID' })
+  }
+
   const { data: worksheet, error } = await supabase
     .from('worksheets')
     .select(`
@@ -19,7 +23,7 @@ export default defineEventHandler(async (event) => {
       grade:grade_levels(label),
       lesson_plan:lesson_plans(id, title)
     `)
-    .eq('id', userId)
+    .eq('id', id)
     .single()
 
   if (error || !worksheet) {

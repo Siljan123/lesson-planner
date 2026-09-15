@@ -12,15 +12,22 @@ export default defineEventHandler(async (event) => {
   sevenDaysAgo.setUTCDate(sevenDaysAgo.getUTCDate() - 6)
   sevenDaysAgo.setUTCHours(0, 0, 0, 0)
 
-  const { data, error } = await supabase
+  const { data: lessonPlans, error: lpError } = await supabase
     .from('lesson_plans')
     .select('created_at, ai_use_declaration')
     .gte('created_at', sevenDaysAgo.toISOString())
     .eq('owner_id', userId)
     .order('created_at', { ascending: true })
 
-  if (error) {
-    throw createError({ statusCode: 500, statusMessage: error.message })
+  const { data: worksheets, error: wsError } = await supabase
+    .from('worksheets')
+    .select('created_at, ai_use_declaration')
+    .gte('created_at', sevenDaysAgo.toISOString())
+    .eq('owner_id', userId)
+    .order('created_at', { ascending: true })
+
+  if (lpError || wsError) {
+    throw createError({ statusCode: 500, statusMessage: lpError?.message || wsError?.message })
   }
 
   // Aggregate by date
@@ -34,17 +41,21 @@ export default defineEventHandler(async (event) => {
     dailyMap.set(key, { tokens: 0, plans: 0 })
   }
 
-  if (data) {
-    data.forEach((plan: any) => {
-      const dateKey = plan.created_at?.slice(0, 10)
+  const processData = (items: any[] | null) => {
+    if (!items) return
+    items.forEach((item: any) => {
+      const dateKey = item.created_at?.slice(0, 10)
       if (!dateKey) return
       const entry = dailyMap.get(dateKey)
       if (!entry) return
-      const tokenCount = plan.ai_use_declaration?.token_usage?.totalTokenCount
+      const tokenCount = item.ai_use_declaration?.token_usage?.totalTokenCount
       if (tokenCount) entry.tokens += parseInt(tokenCount, 10)
       entry.plans += 1
     })
   }
+
+  processData(lessonPlans)
+  processData(worksheets)
 
   const DAILY_LIMIT = 200000
 

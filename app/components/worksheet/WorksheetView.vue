@@ -168,6 +168,66 @@ const rubric = computed(() => content.value?.rubric || [])
         </Button>
       </div>
 
+      <!-- Table of Specification (Always shown when printing or toggled) -->
+      <div
+        v-if="content.table_of_specification && (showAnswerKey || true)"
+        class="border rounded-lg p-5 bg-card print:border-black print:block mb-6"
+        :class="{ 'hidden print:block': !showAnswerKey }"
+      >
+        <div class="flex items-center justify-between border-b pb-3 mb-4 print:border-black">
+          <div class="flex items-center gap-2">
+            <h4 class="font-bold text-base tracking-tight text-foreground print:text-black">
+              Table of Specification (TOS)
+            </h4>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs border-collapse">
+            <thead>
+              <tr class="border-b print:border-black bg-muted/30">
+                <th class="py-2 px-2 text-left font-semibold">Competencies</th>
+                <th class="py-2 px-2 text-center font-semibold border-l print:border-black">No. of Items</th>
+                <th class="py-2 px-2 text-center font-semibold border-l print:border-black">Remembering</th>
+                <th class="py-2 px-2 text-center font-semibold border-l print:border-black">Understanding</th>
+                <th class="py-2 px-2 text-center font-semibold border-l print:border-black">Applying</th>
+                <th class="py-2 px-2 text-center font-semibold border-l print:border-black">Analyzing</th>
+                <th class="py-2 px-2 text-center font-semibold border-l print:border-black">Evaluating</th>
+                <th class="py-2 px-2 text-center font-semibold border-l print:border-black">Creating</th>
+                <th class="py-2 px-2 text-center font-semibold border-l print:border-black">Test Placement</th>
+                <th class="py-2 px-2 text-center font-semibold border-l print:border-black">Percentage</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y print:divide-black">
+              <tr v-for="(row, idx) in content.table_of_specification.competencies" :key="idx" class="hover:bg-muted/10 print:hover:bg-transparent">
+                <td class="py-2 px-2 font-medium">{{ row.competency }}</td>
+                <td class="py-2 px-2 text-center border-l print:border-black">{{ row.no_of_items }}</td>
+                <td class="py-2 px-2 text-center border-l print:border-black">{{ row.remembering }}</td>
+                <td class="py-2 px-2 text-center border-l print:border-black">{{ row.understanding }}</td>
+                <td class="py-2 px-2 text-center border-l print:border-black">{{ row.applying }}</td>
+                <td class="py-2 px-2 text-center border-l print:border-black">{{ row.analyzing }}</td>
+                <td class="py-2 px-2 text-center border-l print:border-black">{{ row.evaluating }}</td>
+                <td class="py-2 px-2 text-center border-l print:border-black">{{ row.creating }}</td>
+                <td class="py-2 px-2 text-center border-l print:border-black">{{ row.test_placement }}</td>
+                <td class="py-2 px-2 text-center border-l print:border-black">{{ row.percentage }}</td>
+              </tr>
+              <tr class="font-bold border-t-2 print:border-black">
+                <td class="py-2 px-2">{{ worksheet.medium_of_instruction === 'English' ? 'TOTAL' : 'KABUUAN' }}</td>
+                <td class="py-2 px-2 text-center border-l print:border-black">{{ content.table_of_specification.total_items }}</td>
+                <td class="py-2 px-2 text-center border-l print:border-black">{{ content.table_of_specification.total_remembering }}</td>
+                <td class="py-2 px-2 text-center border-l print:border-black">{{ content.table_of_specification.total_understanding }}</td>
+                <td class="py-2 px-2 text-center border-l print:border-black">{{ content.table_of_specification.total_applying }}</td>
+                <td class="py-2 px-2 text-center border-l print:border-black">{{ content.table_of_specification.total_analyzing }}</td>
+                <td class="py-2 px-2 text-center border-l print:border-black">{{ content.table_of_specification.total_evaluating }}</td>
+                <td class="py-2 px-2 text-center border-l print:border-black">{{ content.table_of_specification.total_creating }}</td>
+                <td class="py-2 px-2 text-center border-l print:border-black"></td>
+                <td class="py-2 px-2 text-center border-l print:border-black">100%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- Answer Key Box (Always shown when printing or when toggled) -->
       <div
         v-if="showAnswerKey || true"

@@ -1,4 +1,4 @@
-﻿import type { Database } from '../../shared/types/database.types'
+import type { Database } from '../../shared/types/database.types'
 
 export type WorksheetStatus = Database['public']['Enums']['lesson_plan_status']
 export type SchoolTerm = Database['public']['Enums']['school_term']
@@ -45,6 +45,30 @@ export interface RubricCriterion {
   description: string
 }
 
+export interface TosRow {
+  competency: string
+  no_of_items: number
+  remembering?: number
+  understanding?: number
+  applying?: number
+  analyzing?: number
+  evaluating?: number
+  creating?: number
+  test_placement: string
+  percentage: string
+}
+
+export interface TableOfSpecification {
+  competencies: TosRow[]
+  total_items: number
+  total_remembering?: number
+  total_understanding?: number
+  total_applying?: number
+  total_analyzing?: number
+  total_evaluating?: number
+  total_creating?: number
+}
+
 export interface WorksheetContent {
   title: string
   topic?: string
@@ -57,6 +81,7 @@ export interface WorksheetContent {
   sections: WorksheetSection[]
   answer_key?: AnswerKeySection[]
   rubric?: RubricCriterion[]
+  table_of_specification?: TableOfSpecification
   teacher_notes?: string
 }
 

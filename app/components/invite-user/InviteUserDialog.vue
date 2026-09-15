@@ -14,9 +14,7 @@ const emit = defineEmits<{
 const loading = ref(false)
 const form = ref({
   email: '',
-  full_name: '',
   role: 'teacher',
-  school_id: ''
 })
 
 async function onSubmit() {
@@ -26,13 +24,12 @@ async function onSubmit() {
       method: 'POST',
       body: {
         ...form.value,
-        school_id: form.value.school_id || null,
         redirectTo: `${window.location.origin}/auth/confirm`
       }
     })
     emit('success')
     emit('update:open', false)
-    form.value = { email: '', full_name: '', role: 'teacher', school_id: '' }
+    form.value = { email: '', role: 'teacher' }
   } catch (error) {
     alert('Failed to invite user. Check console for details.')
     console.error(error)
@@ -57,10 +54,7 @@ async function onSubmit() {
           <Label for="email">Email</Label>
           <Input id="email" v-model="form.email" type="email" required />
         </div>
-        <div class="space-y-2">
-          <Label for="full_name">Full Name</Label>
-          <Input id="full_name" v-model="form.full_name" required />
-        </div>
+     
         <div class="space-y-2">
           <Label for="role">Role</Label>
           <Select v-model="form.role" required>
@@ -73,10 +67,7 @@ async function onSubmit() {
             </SelectContent>
           </Select>
         </div>
-        <div class="space-y-2">
-          <Label for="school_id">School ID (Optional)</Label>
-          <Input id="school_id" v-model="form.school_id" />
-        </div>
+      
         <DialogFooter class="pt-4">
           <Button type="button" variant="outline" @click="emit('update:open', false)">Cancel</Button>
           <Button type="submit" :disabled="loading">

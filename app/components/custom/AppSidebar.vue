@@ -172,7 +172,6 @@ const gaugeIconColor = computed(() => {
           >
             <AlertTriangle v-if="isLimitReached || isNearLimit" class="w-3 h-3 shrink-0" />
             <span v-if="isLimitReached">Daily limit reached</span>
-            <span v-else>~{{ remainingPlans }} lesson plans remaining</span>
           </div>
         </div>
       </div>

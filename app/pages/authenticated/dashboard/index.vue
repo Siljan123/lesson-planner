@@ -203,17 +203,6 @@ const progressBarBg = computed(() => {
           </CardTitle>
         </CardHeader>
         <CardContent class="space-y-4">
-          <!-- Remaining plans -->
-          <div class="space-y-1">
-            <p class="text-sm text-muted-foreground">Remaining Plans</p>
-            <p class="text-3xl font-bold" :class="usageStatusColor">
-              ~{{ remainingPlans }}
-            </p>
-            <p class="text-xs text-muted-foreground">
-              Based on ~3.5K tokens per plan
-            </p>
-          </div>
-
           <!-- Reset info -->
           <div class="space-y-1">
             <p class="text-sm text-muted-foreground">Quota Resets In</p>
@@ -226,7 +215,7 @@ const progressBarBg = computed(() => {
               ? 'bg-red-500/10 text-red-600 dark:text-red-400'
               : isNearLimit
                 ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                : 'bg-green-500/10 text-green-600 dark:text-green-400'"
+                : 'bg-green-500/10 text-brand dark:text-green-400'"
           >
             <span v-if="isLimitReached"> Daily limit reached</span>
             <span v-else-if="isNearLimit"> Approaching daily limit</span>
