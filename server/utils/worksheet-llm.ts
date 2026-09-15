@@ -9,6 +9,7 @@ export async function generateWorksheetContent(params: {
   medium_of_instruction?: string
   custom_instructions?: string
   lesson_plan_context?: any
+  include_tos?: boolean
 }): Promise<{ content: WorksheetContent; usage?: any }> {
   const apiKey = process.env.GEMINI_API_KEY
   const isEnglish = params.medium_of_instruction === 'English'
@@ -30,9 +31,11 @@ CRITICAL RULES:
 1. Language: Write ALL student directions, questions, and content in ${lang}. Only use official English terms if required by the curriculum (e.g. Mathematics or Science terminology).
 2. Structure: Scaffold from basic recall to guided application, and finally higher-order authentic transfer.
 3. Realistic & Engaging: Use age-appropriate situations, localized Filipino context, and concrete examples suitable for ${params.grade}.
-4. Provide a complete, unambiguous Answer Key and Rubric for the teacher.
+4. Custom Instructions: You MUST STRICTLY FOLLOW any specific item counts or item types requested in the Teacher Instructions (e.g., if asked for 20 multiple choice items and 10 fill in the blanks, you MUST generate exactly that many items and structure the sections accordingly).
+5. Provide a complete, unambiguous Answer Key and Rubric for the teacher.
+${params.include_tos ? '6. Create a Table of Specification (TOS) aligning with the generated items, mapping them to cognitive levels (Remembering, Understanding, Applying, Analyzing, Evaluating, Creating).' : ''}
 
-Return ONLY a valid JSON object matching this schema exactly:
+Return ONLY a valid JSON object matching this STRUCTURE (ADJUST the number of sections, number of items, and item types strictly based on the teacher's custom instructions! If a specific item type is not requested or requested as 0, DO NOT INCLUDE THAT SECTION at all. The item count and sections below are just examples):
 {
   "title": "${isEnglish ? `Learning Activity Sheet in ${params.subject} (${params.grade}): ${params.topic}` : `Gawaing Pagkatuto sa ${params.subject} (${params.grade}): ${params.topic}`}",
   "topic": "${params.topic}",
@@ -56,43 +59,8 @@ Return ONLY a valid JSON object matching this schema exactly:
           "correct_answer": "A. Choice 1",
           "points": 1,
           "explanation": "Brief reason why A is correct"
-        },
-        {
-          "item_number": 2,
-          "question": "Specific question text for item 2",
-          "type": "multiple_choice",
-          "options": ["A. Choice 1", "B. Choice 2", "C. Choice 3", "D. Choice 4"],
-          "correct_answer": "B. Choice 2",
-          "points": 1,
-          "explanation": "Brief reason"
-        },
-        {
-          "item_number": 3,
-          "question": "Specific question text for item 3",
-          "type": "multiple_choice",
-          "options": ["A. Choice 1", "B. Choice 2", "C. Choice 3", "D. Choice 4"],
-          "correct_answer": "C. Choice 3",
-          "points": 1,
-          "explanation": "Brief reason"
-        },
-        {
-          "item_number": 4,
-          "question": "Specific question text for item 4",
-          "type": "multiple_choice",
-          "options": ["A. Choice 1", "B. Choice 2", "C. Choice 3", "D. Choice 4"],
-          "correct_answer": "D. Choice 4",
-          "points": 1,
-          "explanation": "Brief reason"
-        },
-        {
-          "item_number": 5,
-          "question": "Specific question text for item 5",
-          "type": "multiple_choice",
-          "options": ["A. Choice 1", "B. Choice 2", "C. Choice 3", "D. Choice 4"],
-          "correct_answer": "A. Choice 1",
-          "points": 1,
-          "explanation": "Brief reason"
         }
+        // ... GENERATE ALL REQUESTED MULTIPLE CHOICE ITEMS HERE (e.g. up to 20 if requested) ...
       ]
     },
     {
@@ -101,45 +69,14 @@ Return ONLY a valid JSON object matching this schema exactly:
       "instructions": "${isEnglish ? 'Fill in each blank or identify the correct term that best completes each statement.' : 'Punan ang patlang o tukuyin ang wastong salita upang mabuo ang diwa ng bawat pangungusap.'}",
       "items": [
         {
-          "item_number": 6,
+          "item_number": 6, // Continue numbering
           "question": "Sentence with blank to complete",
           "type": "fill_in_blank",
           "correct_answer": "Expected answer",
           "points": 1,
           "explanation": "Why this answer fits"
-        },
-        {
-          "item_number": 7,
-          "question": "Sentence with blank to complete",
-          "type": "fill_in_blank",
-          "correct_answer": "Expected answer",
-          "points": 1,
-          "explanation": "Why this answer fits"
-        },
-        {
-          "item_number": 8,
-          "question": "Sentence with blank to complete",
-          "type": "fill_in_blank",
-          "correct_answer": "Expected answer",
-          "points": 1,
-          "explanation": "Why this answer fits"
-        },
-        {
-          "item_number": 9,
-          "question": "Identification question",
-          "type": "identification",
-          "correct_answer": "Expected answer",
-          "points": 2,
-          "explanation": "Explanation"
-        },
-        {
-          "item_number": 10,
-          "question": "Identification question",
-          "type": "identification",
-          "correct_answer": "Expected answer",
-          "points": 2,
-          "explanation": "Explanation"
         }
+        // ... GENERATE ALL REQUESTED FILL IN THE BLANK ITEMS HERE ...
       ]
     },
     {
@@ -170,28 +107,22 @@ Return ONLY a valid JSON object matching this schema exactly:
     {
       "section_title": "${isEnglish ? 'Part I: Concept Recall & Identification' : 'Bahagi I: Pagkilala at Pag-unawa sa Konsepto'}",
       "items": [
-        { "item_number": 1, "answer": "A. Choice 1", "explanation": "Key principle" },
-        { "item_number": 2, "answer": "B. Choice 2", "explanation": "Key principle" },
-        { "item_number": 3, "answer": "C. Choice 3", "explanation": "Key principle" },
-        { "item_number": 4, "answer": "D. Choice 4", "explanation": "Key principle" },
-        { "item_number": 5, "answer": "A. Choice 1", "explanation": "Key principle" }
+        { "item_number": 1, "answer": "A. Choice 1", "explanation": "Key principle" }
+        // ... ALL ANSWER KEY ITEMS FOR PART 1 ...
       ]
     },
     {
       "section_title": "${isEnglish ? 'Part II: Guided Practice & Analysis' : 'Bahagi II: Ginabayang Pagsasanay at Pagsusuri'}",
       "items": [
-        { "item_number": 6, "answer": "Answer 6" },
-        { "item_number": 7, "answer": "Answer 7" },
-        { "item_number": 8, "answer": "Answer 8" },
-        { "item_number": 9, "answer": "Answer 9" },
-        { "item_number": 10, "answer": "Answer 10" }
+        { "item_number": 6, "answer": "Answer 6" }
+        // ... ALL ANSWER KEY ITEMS FOR PART 2 ...
       ]
     },
     {
       "section_title": "${isEnglish ? 'Part III: Real-World Application & Reflection' : 'Bahagi III: Paglalapat sa Tunay na Buhay at Repleksiyon'}",
       "items": [
-        { "item_number": 11, "answer": "Exemplar answer" },
-        { "item_number": 12, "answer": "Exemplar answer" }
+        { "item_number": 11, "answer": "Exemplar answer" }
+        // ... ALL ANSWER KEY ITEMS FOR PART 3 ...
       ]
     }
   ],
@@ -200,14 +131,44 @@ Return ONLY a valid JSON object matching this schema exactly:
       "criteria": "${isEnglish ? 'Concept Accuracy & Relevance' : 'Kawastuhan ng Konsepto at Kaugnayan'}",
       "max_points": 5,
       "description": "${isEnglish ? 'Answers clearly reflect correct understanding of the topic with accurate explanations.' : 'Wasto at malinaw na nailapat ang mga konsepto ng aralin nang may angkop na paliwanag.'}"
-    },
-    {
-      "criteria": "${isEnglish ? 'Clarity & Reasoning' : 'Kalinawan at Pangangatwiran'}",
-      "max_points": 5,
-      "description": "${isEnglish ? 'Ideas are expressed logically with supporting reasons and examples.' : 'Maayos at lohikal ang pagpapahayag ng ideya na may kasamang patunay o halimbawa.'}"
     }
   ],
-  "teacher_notes": "${isEnglish ? 'Recommended time: 30-40 minutes.' : 'Inirerekomendang oras: 30-40 minuto.'}"
+  "teacher_notes": "${isEnglish ? 'Recommended time: 30-40 minutes.' : 'Inirerekomendang oras: 30-40 minuto.'}"${params.include_tos ? `,
+  "table_of_specification": {
+    "competencies": [
+      {
+        "competency": "Identifies the basic concepts of the topic",
+        "no_of_items": 5,
+        "remembering": 3,
+        "understanding": 2,
+        "applying": 0,
+        "analyzing": 0,
+        "evaluating": 0,
+        "creating": 0,
+        "test_placement": "1-5",
+        "percentage": "41.67%"
+      },
+      {
+        "competency": "Applies concepts in real-world scenarios",
+        "no_of_items": 7,
+        "remembering": 0,
+        "understanding": 0,
+        "applying": 5,
+        "analyzing": 2,
+        "evaluating": 0,
+        "creating": 0,
+        "test_placement": "6-12",
+        "percentage": "58.33%"
+      }
+    ],
+    "total_items": 12,
+    "total_remembering": 3,
+    "total_understanding": 2,
+    "total_applying": 5,
+    "total_analyzing": 2,
+    "total_evaluating": 0,
+    "total_creating": 0
+  }` : ''}
 }`
 
   if (apiKey) {
@@ -226,12 +187,17 @@ Return ONLY a valid JSON object matching this schema exactly:
 
       const text = response?.candidates?.[0]?.content?.parts?.[0]?.text
       if (text) {
-        const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim()
-        const parsed: WorksheetContent = JSON.parse(cleanText)
-        console.log(`[worksheet-llm] Gemini successfully generated worksheet with ${parsed?.sections?.length || 0} sections!`)
-        return {
-          content: parsed,
-          usage: response?.usageMetadata || null
+        try {
+          const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim()
+          const parsed: WorksheetContent = JSON.parse(cleanText)
+          console.log(`[worksheet-llm] Gemini successfully generated worksheet with ${parsed?.sections?.length || 0} sections!`)
+          return {
+            content: parsed,
+            usage: response?.usageMetadata || null
+          }
+        } catch (parseErr) {
+          console.error('[worksheet-llm] JSON parse failed, dumping text to console:', text)
+          throw parseErr
         }
       }
     } catch (err) {
@@ -453,7 +419,44 @@ Return ONLY a valid JSON object matching this schema exactly:
     ],
     teacher_notes: isEnglish
       ? 'Duration: 30-45 minutes. Provide peer support for items 11 and 12 if needed.'
-      : 'Inaasahang tagal: 30-45 minuto. Maaaring magbigay ng gabay sa talakayan bago ang Bahagi III.'
+      : 'Inaasahang tagal: 30-45 minuto. Maaaring magbigay ng gabay sa talakayan bago ang Bahagi III.',
+    ...(params.include_tos ? {
+      table_of_specification: {
+        competencies: [
+          {
+            competency: isEnglish ? `Understand basic concepts of ${params.topic}` : `Maunawaan ang batayang konsepto ng ${params.topic}`,
+            no_of_items: 5,
+            remembering: 3,
+            understanding: 2,
+            applying: 0,
+            analyzing: 0,
+            evaluating: 0,
+            creating: 0,
+            test_placement: '1-5',
+            percentage: '41.67%'
+          },
+          {
+            competency: isEnglish ? 'Apply concepts in practical situations' : 'Ilapat ang konsepto sa mga praktikal na sitwasyon',
+            no_of_items: 7,
+            remembering: 0,
+            understanding: 0,
+            applying: 4,
+            analyzing: 3,
+            evaluating: 0,
+            creating: 0,
+            test_placement: '6-12',
+            percentage: '58.33%'
+          }
+        ],
+        total_items: 12,
+        total_remembering: 3,
+        total_understanding: 2,
+        total_applying: 4,
+        total_analyzing: 3,
+        total_evaluating: 0,
+        total_creating: 0
+      }
+    } : {})
   }
 
   return {

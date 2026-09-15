@@ -45,6 +45,14 @@ const editableTitle = ref('')
 const editableStatus = ref('draft')
 const activeTab = ref('preview')
 
+import { ref, computed, onErrorCaptured } from 'vue'
+
+const vueError = ref<string | null>(null)
+onErrorCaptured((err, instance, info) => {
+  vueError.value = `${err.toString()}\n\nInfo: ${info}\n\nStack:\n${(err as Error).stack}`
+  return false
+})
+
 watch(worksheet, (ws) => {
   if (ws) {
     editableTitle.value = ws.title || ''
@@ -177,6 +185,12 @@ function handleDownload() {
     <div v-if="pending" class="py-20 text-center space-y-3">
       <Loader2 class="h-8 w-8 animate-spin text-primary mx-auto" />
       <p class="text-sm text-muted-foreground">Loading worksheet...</p>
+    </div>
+
+    <!-- Error State -->
+    <div v-else-if="vueError" class="py-10 text-center space-y-4">
+      <div class="text-destructive font-bold text-xl">Vue Rendering Error</div>
+      <pre class="bg-red-50 text-red-900 p-4 rounded text-left overflow-auto max-w-full text-xs">{{ vueError }}</pre>
     </div>
 
     <!-- Worksheet Content -->

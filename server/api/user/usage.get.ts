@@ -11,16 +11,24 @@ export default defineEventHandler(async (event) => {
   const startOfDay = new Date()
   startOfDay.setUTCHours(0,0,0,0)
 
-  const { data } = await supabase
+  const { data: lessonPlans } = await supabase
     .from('lesson_plans')
     .select('ai_use_declaration')
     .gte('created_at', startOfDay.toISOString())
     .eq('owner_id', userId)
 
+  const { data: worksheets } = await supabase
+    .from('worksheets')
+    .select('ai_use_declaration')
+    .gte('created_at', startOfDay.toISOString())
+    .eq('owner_id', userId)
+
   let usedTokens = 0
-  if (data) {
-    data.forEach(plan => {
-      const declaration = plan.ai_use_declaration
+  
+  const processData = (items: any[] | null) => {
+    if (!items) return
+    items.forEach(item => {
+      const declaration = item.ai_use_declaration
       const tokenUsage = typeof declaration === 'object' && declaration !== null && !Array.isArray(declaration)
         && 'token_usage' in declaration
         ? (declaration as { token_usage?: { totalTokenCount?: string | number } }).token_usage
@@ -32,6 +40,9 @@ export default defineEventHandler(async (event) => {
       }
     })
   }
+
+  processData(lessonPlans)
+  processData(worksheets)
 
   // Define daily token limit per user
   const DAILY_LIMIT = 200000 

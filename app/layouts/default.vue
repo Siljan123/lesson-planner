@@ -16,7 +16,7 @@ import { Separator } from '@/components/ui/separator'
         </div>
         <UserProfileDropdown />
       </header>
-      <main class="flex-1 bg-muted/20 p-4 md:p-8">
+      <main class="flex-1 min-w-0 bg-muted/20 p-4 md:p-8">
         <slot />
       </main>
     </SidebarInset>

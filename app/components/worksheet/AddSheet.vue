@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger, SheetFooter, SheetClose } from '@/components/ui/sheet'
+import { Checkbox } from '@/components/ui/checkbox'
 import { CheckCircle2, Loader2, Plus, Sparkles, AlertCircle, BookOpen } from '@lucide/vue'
 
 const router = useRouter()
@@ -37,7 +38,12 @@ const form = ref({
   medium_of_instruction: 'English',
   topic: '',
   target_competency: '',
-  custom_instructions: ''
+  custom_instructions: '',
+  include_tos: false,
+  q_multiple_choice: 10,
+  q_true_false: 0,
+  q_fill_in_blank: 0,
+  q_essay: 0
 })
 
 const emit = defineEmits(['created'])
@@ -101,6 +107,25 @@ async function handleGenerate() {
   errorMessage.value = ''
   startProgressSimulation()
 
+  const itemReqs = [
+    form.value.q_multiple_choice > 0 ? `${form.value.q_multiple_choice} Multiple Choice items` : null,
+    form.value.q_true_false > 0 ? `${form.value.q_true_false} True/False items` : null,
+    form.value.q_fill_in_blank > 0 ? `${form.value.q_fill_in_blank} Fill in the Blank items` : null,
+    form.value.q_essay > 0 ? `${form.value.q_essay} Essay/Short Answer items` : null,
+  ].filter(Boolean)
+
+  let finalCustomInstructions = form.value.custom_instructions.trim()
+  if (itemReqs.length > 0) {
+    const countsText = `CRITICAL REQUIREMENT: You MUST generate EXACTLY the following items, and NOTHING ELSE:
+${itemReqs.join(', ')}
+
+    DO NOT generate any sections, parts, or questions for item types that are not listed above. For example, if Fill in the Blanks is not listed, DO NOT create a Fill in the Blank section. Omit unrequested sections entirely.`
+
+    finalCustomInstructions = finalCustomInstructions 
+      ? `${countsText}\n\n${finalCustomInstructions}`
+      : countsText
+  }
+
   try {
     const result = await generateWorksheet({
       title: form.value.title.trim() || `Worksheet: ${form.value.topic}`,
@@ -110,7 +135,8 @@ async function handleGenerate() {
       medium_of_instruction: form.value.medium_of_instruction,
       topic: form.value.topic.trim(),
       target_competency: form.value.target_competency.trim() || undefined,
-      custom_instructions: form.value.custom_instructions.trim() || undefined
+      custom_instructions: finalCustomInstructions || undefined,
+      include_tos: form.value.include_tos
     })
 
     clearProgressSimulation()
@@ -299,6 +325,30 @@ const generationSteps = [
             />
           </div>
 
+          <!-- Question Types Configuration -->
+          <div class="space-y-3 p-4 bg-muted/30 rounded-lg border">
+            <Label class="text-base font-semibold">Question Types & Quantities</Label>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div class="space-y-1.5">
+                <Label for="q_mc" class="text-xs text-muted-foreground font-medium">Multiple Choice</Label>
+                <Input id="q_mc" type="number" min="0" max="100" v-model="form.q_multiple_choice" class="h-9" />
+              </div>
+              <div class="space-y-1.5">
+                <Label for="q_tf" class="text-xs text-muted-foreground font-medium">True/False</Label>
+                <Input id="q_tf" type="number" min="0" max="100" v-model="form.q_true_false" class="h-9" />
+              </div>
+              <div class="space-y-1.5">
+                <Label for="q_fib" class="text-xs text-muted-foreground font-medium">Fill in the Blanks</Label>
+                <Input id="q_fib" type="number" min="0" max="100" v-model="form.q_fill_in_blank" class="h-9" />
+              </div>
+              <div class="space-y-1.5">
+                <Label for="q_essay" class="text-xs text-muted-foreground font-medium">Essay</Label>
+                <Input id="q_essay" type="number" min="0" max="10" v-model="form.q_essay" class="h-9" />
+              </div>
+            </div>
+            <p class="text-[11px] text-muted-foreground">Leave at 0 if you do not want to include that question type.</p>
+          </div>
+
           <!-- Title -->
           <div class="space-y-2">
             <Label for="title">Worksheet Title</Label>
@@ -329,6 +379,17 @@ const generationSteps = [
               rows="2"
               placeholder="e.g. Include localized Filipino scenarios, add 2 word problems, keep questions suitable for beginner readers..."
             />
+          </div>
+
+          <!-- Include TOS Checkbox -->
+          <div class="flex items-center space-x-2 pt-2">
+            <Checkbox id="include_tos" :checked="form.include_tos" @update:checked="form.include_tos = $event" />
+            <label
+              for="include_tos"
+              class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              Include Table of Specification (TOS)
+            </label>
           </div>
         </div>
       </div>

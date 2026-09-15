@@ -63,7 +63,8 @@ export default defineEventHandler(async (event) => {
     term: body.term || 'term_1',
     medium_of_instruction: mediumOfInstruction,
     custom_instructions: body.custom_instructions || undefined,
-    lesson_plan_context: lessonPlanContext
+    lesson_plan_context: lessonPlanContext,
+    include_tos: body.include_tos === true
   })
 
   // Insert into DB

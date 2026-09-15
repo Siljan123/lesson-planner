@@ -243,6 +243,91 @@ export async function buildWorksheetDocx(worksheet: Worksheet, includeAnswerKey 
     }
   }
 
+  // Table of Specification (TOS)
+  if (content.table_of_specification) {
+    const tos = content.table_of_specification
+    children.push(
+      new Paragraph({
+        pageBreakBefore: true,
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 120 },
+        children: [
+          new TextRun({
+            text: isEnglish ? 'TABLE OF SPECIFICATION' : 'TALAAN NG ESPESIPIKASYON',
+            bold: true,
+            size: 28,
+            color: '1E3A8A'
+          })
+        ]
+      })
+    )
+
+    const tableRows = []
+
+    // Header row
+    tableRows.push(
+      new TableRow({
+        children: [
+          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Competencies', bold: true, size: 16 })] })] }),
+          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'No. of Items', bold: true, size: 16 })] })] }),
+          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Remembering', bold: true, size: 14 })] })] }),
+          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Understanding', bold: true, size: 14 })] })] }),
+          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Applying', bold: true, size: 14 })] })] }),
+          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Analyzing', bold: true, size: 14 })] })] }),
+          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Evaluating', bold: true, size: 14 })] })] }),
+          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Creating', bold: true, size: 14 })] })] }),
+          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Test Placement', bold: true, size: 14 })] })] }),
+          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Percentage', bold: true, size: 14 })] })] }),
+        ]
+      })
+    )
+
+    // Data rows
+    for (const row of tos.competencies) {
+      tableRows.push(
+        new TableRow({
+          children: [
+            new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: row.competency, size: 16 })] })] }),
+            new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: String(row.no_of_items), size: 16 })] })] }),
+            new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: String(row.remembering || 0), size: 16 })] })] }),
+            new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: String(row.understanding || 0), size: 16 })] })] }),
+            new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: String(row.applying || 0), size: 16 })] })] }),
+            new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: String(row.analyzing || 0), size: 16 })] })] }),
+            new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: String(row.evaluating || 0), size: 16 })] })] }),
+            new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: String(row.creating || 0), size: 16 })] })] }),
+            new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: row.test_placement, size: 16 })] })] }),
+            new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: row.percentage, size: 16 })] })] }),
+          ]
+        })
+      )
+    }
+
+    // Footer row
+    tableRows.push(
+      new TableRow({
+        children: [
+          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: isEnglish ? 'TOTAL' : 'KABUUAN', bold: true, size: 16 })] })] }),
+          new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: String(tos.total_items), bold: true, size: 16 })] })] }),
+          new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: String(tos.total_remembering || 0), bold: true, size: 16 })] })] }),
+          new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: String(tos.total_understanding || 0), bold: true, size: 16 })] })] }),
+          new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: String(tos.total_applying || 0), bold: true, size: 16 })] })] }),
+          new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: String(tos.total_analyzing || 0), bold: true, size: 16 })] })] }),
+          new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: String(tos.total_evaluating || 0), bold: true, size: 16 })] })] }),
+          new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: String(tos.total_creating || 0), bold: true, size: 16 })] })] }),
+          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: '', size: 16 })] })] }),
+          new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: '100%', bold: true, size: 16 })] })] }),
+        ]
+      })
+    )
+
+    children.push(
+      new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        rows: tableRows
+      })
+    )
+  }
+
   // 5. Answer Key (Separate Page for Teacher)
   if (includeAnswerKey && content.answer_key && content.answer_key.length > 0) {
     children.push(

@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useAsyncData } from '#imports'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import {
   Circle,
   CircleDot,
@@ -20,7 +21,11 @@ import {
   Eye,
   ArrowRight,
   Download,
-  BookOpen
+  BookOpen,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight
 } from '@lucide/vue'
 import {
   DropdownMenu,
@@ -127,6 +132,23 @@ const filteredWorksheets = computed(() => {
   return result
 })
 
+const pageIndex = ref(0)
+const pageSize = ref('10')
+
+watch([search, statusFilter, subjectFilter, sortKey, sortOrder, pageSize], () => {
+  pageIndex.value = 0
+})
+
+const paginatedWorksheets = computed(() => {
+  const start = pageIndex.value * Number(pageSize.value)
+  const end = start + Number(pageSize.value)
+  return filteredWorksheets.value.slice(start, end)
+})
+
+const pageCount = computed(() => {
+  return Math.ceil(filteredWorksheets.value.length / Number(pageSize.value)) || 1
+})
+
 function openPreview(ws: Worksheet) {
   selectedWorksheet.value = ws
   isPreviewSheetOpen.value = true
@@ -173,10 +195,10 @@ function formatDate(dateStr: string) {
 </script>
 
 <template>
-  <div class="space-y-5 py-6 max-w-full min-w-0">
+  <div class="space-y-5 py-6 w-full max-w-7xl mx-auto">
     <!-- Toolbar -->
     <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-      <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+      <div class="flex flex-wrap items-center gap-2">
         <div class="relative w-full sm:w-auto flex-1 min-w-[150px]">
           <Input
             v-model="search"
@@ -248,7 +270,7 @@ function formatDate(dateStr: string) {
           v-if="selectedIds.length > 0"
           variant="destructive"
           size="sm"
-          class="h-8 gap-1.5 text-[13px] font-normal shrink-0 ml-2"
+          class="h-8 gap-1.5 text-[13px] font-normal shrink-0"
           :disabled="isDeleting === 'bulk'"
           @click="handleBulkDelete"
         >
@@ -265,7 +287,7 @@ function formatDate(dateStr: string) {
     </div>
 
     <!-- Data Table -->
-    <div class="w-full border rounded-lg overflow-hidden bg-card">
+    <div class="border rounded-lg overflow-hidden bg-card">
       <Table>
         <TableHeader>
           <TableRow class="hover:bg-transparent border-b">
@@ -354,7 +376,7 @@ function formatDate(dateStr: string) {
 
           <!-- Data Rows -->
           <TableRow
-            v-for="ws in filteredWorksheets"
+            v-for="ws in paginatedWorksheets"
             :key="ws.id"
             v-else
             class="border-b hover:bg-muted/40 transition-colors"
@@ -373,7 +395,7 @@ function formatDate(dateStr: string) {
             <TableCell class="py-3 pr-3">
               <NuxtLink
                 :to="`/authenticated/worksheets/${ws.id}`"
-                class="text-[13px] font-medium text-foreground hover:underline truncate block"
+                class="text-[14px] font-medium text-foreground truncate hover:underline min-w-5 block"
                 :title="ws.title"
               >
                 {{ ws.title }}
@@ -383,10 +405,9 @@ function formatDate(dateStr: string) {
             <!-- Topic & Subject -->
             <TableCell class="py-3">
               <div class="flex items-center gap-2">
-                <span class="inline-flex items-center shrink-0 text-[11px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                <span class="inline-flex items-center text-[11px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded">
                   {{ ws.subject?.name || 'Subject' }}
                 </span>
-                <span class="text-[13px] text-muted-foreground truncate">{{ ws.topic || '—' }}</span>
               </div>
             </TableCell>
 
@@ -448,9 +469,39 @@ function formatDate(dateStr: string) {
       </Table>
     </div>
 
-    <!-- Footer count -->
-    <div v-if="filteredWorksheets.length > 0" class="text-[12px] text-muted-foreground">
-      {{ filteredWorksheets.length }} of {{ (worksheets || []).length }} worksheet(s)
+    <!-- Footer / pagination -->
+    <div v-if="filteredWorksheets.length > 0" class="flex items-center justify-between px-2 py-4">
+      <div class="text-[13px] text-muted-foreground hidden sm:block">
+        {{ selectedIds.length }} of {{ filteredWorksheets.length }} row(s) selected.
+      </div>
+      <div class="flex items-center justify-between sm:justify-end w-full sm:w-auto space-x-6 lg:space-x-8">
+        <div class="flex items-center space-x-2">
+          <p class="text-[13px] font-medium text-foreground hidden sm:block">Rows per page</p>
+          <Select v-model="pageSize">
+            <SelectTrigger class="h-8 w-[70px] text-[13px]"><SelectValue /></SelectTrigger>
+            <SelectContent side="top">
+              <SelectItem v-for="n in [10,20,30,40,50]" :key="n" :value="`${n}`" class="text-[13px]">{{ n }}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div class="flex items-center justify-center text-[13px] font-medium text-foreground">
+          Page {{ pageIndex + 1 }} of {{ pageCount }}
+        </div>
+        <div class="flex items-center space-x-2">
+          <Button variant="outline" class="h-8 w-8 p-0" :disabled="pageIndex === 0" @click="pageIndex = 0">
+            <ChevronsLeft class="h-4 w-4" />
+          </Button>
+          <Button variant="outline" class="h-8 w-8 p-0" :disabled="pageIndex === 0" @click="pageIndex--">
+            <ChevronLeft class="h-4 w-4" />
+          </Button>
+          <Button variant="outline" class="h-8 w-8 p-0" :disabled="pageIndex >= pageCount - 1" @click="pageIndex++">
+            <ChevronRight class="h-4 w-4" />
+          </Button>
+          <Button variant="outline" class="h-8 w-8 p-0" :disabled="pageIndex >= pageCount - 1" @click="pageIndex = pageCount - 1">
+            <ChevronsRight class="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
     </div>
 
     <!-- Quick Preview Sheet -->
