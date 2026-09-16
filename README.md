@@ -1,75 +1,76 @@
-# Nuxt Minimal Starter
+# Setting Up Lesson Planner
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+Welcome to the **Lesson Planner** project! Follow these instructions to download, set up, and run the application on your local machine for development.
 
-## Setup
+## Prerequisites
 
-Make sure to install dependencies:
+Before you begin, ensure you have the following installed:
+- [Node.js](https://nodejs.org/) (v18 or higher recommended)
+- [pnpm](https://pnpm.io/) (preferred package manager)
+- [Git](https://git-scm.com/)
+
+## 1. Download the App
+
+To get started, clone the repository to your local machine:
 
 ```bash
-# npm
-npm install
+git clone https://github.com/Siljan123/lesson-planner.git
+cd lesson-planner
+```
 
-# pnpm
+*(Note: Replace the URL above with the actual repository URL where you host the open-source project.)*
+
+## 2. Install Dependencies
+
+This project uses `pnpm` for package management. Install all required dependencies by running:
+
+```bash
 pnpm install
-
-# yarn
-yarn install
-
-# bun
-bun install
 ```
 
-## Development Server
+## 3. Environment Configuration
 
-Start the development server on `http://localhost:3000`:
+The application requires certain environment variables to function correctly, particularly for AI generation features and the database (Supabase).
+
+1. Create a `.env` file in the root of the project.
+
+2. Open the `.env` file and add your API keys and configuration:
+
+```env
+# Google Gemini API Key for AI generation features
+GEMINI_API_KEY=your_gemini_api_key_here
+
+# Supabase Configuration
+NUXT_PUBLIC_SUPABASE_URL=your_supabase_url_here
+NUXT_PUBLIC_SUPABASE_KEY=your_supabase_anon_key_here
+SUPABASE_SERVICE_KEY=your_supabase_service_key_here
+```
+
+**Where to get these keys:**
+- **GEMINI_API_KEY**: Obtain an API key from [Google AI Studio](https://aistudio.google.com/).
+- **Supabase Keys**: Create a new project on [Supabase](https://supabase.com/). You can find these keys under **Project Settings > API**.
+
+## 4. Run the Development Server
+
+Once your environment variables are set up, you can start the Nuxt development server:
 
 ```bash
-# npm
-npm run dev
-
-# pnpm
 pnpm dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
 ```
 
-## Production
+The application will start running at [http://localhost:3000](http://localhost:3000). Open this URL in your browser to view and interact with the app.
 
-Build the application for production:
+## 5. Building for Production
+
+If you want to test the production build locally, run the following commands:
 
 ```bash
-# npm
-npm run build
-
-# pnpm
+# Build the application
 pnpm build
 
-# yarn
-yarn build
-
-# bun
-bun run build
-```
-
-Locally preview production build:
-
-```bash
-# npm
-npm run preview
-
-# pnpm
+# Preview the production build
 pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
 ```
 
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+## Need Help?
+If you encounter any issues during setup, feel free to open an issue in the repository!
