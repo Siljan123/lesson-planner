@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   ArrowLeft,
@@ -99,13 +98,60 @@ async function handleDelete() {
   }
 }
 
-function handlePrint() {
-  window.print()
-}
-
 function handleDownload() {
   if (!worksheet.value) return
-  downloadExport(worksheet.value.id, editableTitle.value || worksheet.value.title, true)
+  downloadExport(worksheet.value.id, editableTitle.value || worksheet.value.title, true, 'both')
+}
+
+function handleDownloadTOS() {
+  if (!worksheet.value?.content?.table_of_specification) return
+  const tos = worksheet.value.content.table_of_specification
+  
+  const headers = ['Competencies', 'No. of Items', 'Remembering', 'Understanding', 'Applying', 'Analyzing', 'Evaluating', 'Creating', 'Test Placement', 'Percentage']
+  
+  const competencies = Array.isArray(tos.competencies) ? tos.competencies : []
+  const rows = competencies.map((row: any) => [
+    `"${(row.competency || '').replace(/"/g, '""')}"`,
+    row.no_of_items || 0,
+    row.remembering || 0,
+    row.understanding || 0,
+    row.applying || 0,
+    row.analyzing || 0,
+    row.evaluating || 0,
+    row.creating || 0,
+    `"${(row.test_placement || '').replace(/"/g, '""')}"`,
+    `"${(row.percentage || '').replace(/"/g, '""')}"`
+  ])
+  
+  const totalsRow = [
+    '"TOTAL"',
+    tos.total_items || 0,
+    tos.total_remembering || 0,
+    tos.total_understanding || 0,
+    tos.total_applying || 0,
+    tos.total_analyzing || 0,
+    tos.total_evaluating || 0,
+    tos.total_creating || 0,
+    '""',
+    '"100%"'
+  ]
+  
+  const csvContent = [
+    headers.join(','),
+    ...rows.map(r => r.join(',')),
+    totalsRow.join(',')
+  ].join('\n')
+  
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  const sanitizedTitle = (editableTitle.value || worksheet.value.title || 'worksheet').replace(/[^a-zA-Z0-9_-]/g, '_')
+  a.download = `${sanitizedTitle}_TOS.csv`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
 }
 </script>
 
@@ -146,17 +192,15 @@ function handleDownload() {
             <SelectItem value="exported">Exported</SelectItem>
           </SelectContent>
         </Select>
-
-        <!-- Print -->
-        <Button variant="outline" size="sm" class="h-8 gap-1.5 text-xs cursor-pointer" @click="handlePrint">
-          <Printer class="h-3.5 w-3.5" />
-          <span>Print</span>
-        </Button>
-
         <!-- Download DOCX -->
         <Button variant="outline" size="sm" class="h-8 gap-1.5 text-xs cursor-pointer" @click="handleDownload">
           <Download class="h-3.5 w-3.5" />
-          <span>DOCX</span>
+          <span>Worksheet (DOCX)</span>
+        </Button>
+
+        <Button v-if="worksheet?.content?.table_of_specification" variant="outline" size="sm" class="h-8 gap-1.5 text-xs cursor-pointer" @click="handleDownloadTOS">
+          <Download class="h-3.5 w-3.5" />
+          <span>TOS (CSV)</span>
         </Button>
 
         <!-- Save -->
@@ -197,7 +241,7 @@ function handleDownload() {
     <div v-else-if="worksheet" class="space-y-6">
       <Tabs v-model="activeTab" class="w-full">
         <TabsList class="print:hidden">
-          <TabsTrigger value="preview" class="gap-1.5 text-xs">
+          <TabsTrigger value="preview" class="gap-2 text-md">
             <Eye class="h-3.5 w-3.5" />
             <span>Student Worksheet</span>
           </TabsTrigger>

@@ -97,6 +97,29 @@ const isFormValid = computed(() => {
   return form.value.subject_id && form.value.grade_level_id && form.value.topic.trim()
 })
 
+const referenceFile = ref<{ name: string; type: string; base64: string } | null>(null)
+
+function handleFileUpload(event: Event) {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (!file) {
+    referenceFile.value = null
+    return
+  }
+
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    const dataUrl = e.target?.result as string
+    const base64 = dataUrl.split(',')[1]!
+    referenceFile.value = {
+      name: file.name,
+      type: file.type || 'application/octet-stream',
+      base64
+    }
+  }
+  reader.readAsDataURL(file)
+}
+
 async function handleGenerate() {
   if (!isFormValid.value) return
   if (!form.value.title.trim()) {
@@ -116,10 +139,11 @@ async function handleGenerate() {
 
   let finalCustomInstructions = form.value.custom_instructions.trim()
   if (itemReqs.length > 0) {
-    const countsText = `CRITICAL REQUIREMENT: You MUST generate EXACTLY the following items, and NOTHING ELSE:
+    const countsText = `CRITICAL REQUIREMENT: UNLESS a complete Table of Specification or test blueprint is provided in the reference material (in which case, follow the reference material's structure exactly), you MUST structure the test strictly with the following item types and counts:
 ${itemReqs.join(', ')}
 
-    DO NOT generate any sections, parts, or questions for item types that are not listed above. For example, if Fill in the Blanks is not listed, DO NOT create a Fill in the Blank section. Omit unrequested sections entirely.`
+    Important: Do not add any other question types not listed above. 
+    YOU MUST ABSOLUTELY INCLUDE the 'table_of_specification' JSON object if requested, as well as the Answer Key and Rubric.`
 
     finalCustomInstructions = finalCustomInstructions 
       ? `${countsText}\n\n${finalCustomInstructions}`
@@ -136,7 +160,8 @@ ${itemReqs.join(', ')}
       topic: form.value.topic.trim(),
       target_competency: form.value.target_competency.trim() || undefined,
       custom_instructions: finalCustomInstructions || undefined,
-      include_tos: form.value.include_tos
+      include_tos: form.value.include_tos,
+      reference_file: referenceFile.value
     })
 
     clearProgressSimulation()
@@ -169,9 +194,9 @@ const generationSteps = [
 <template>
   <Sheet v-model:open="isOpen">
     <SheetTrigger as-child>
-      <Button class="gap-2 shadow-xs cursor-pointer">
+       <Button variant="outline" size="sm" class="h-8 gap-1.5 text-[13px] border-dashed font-normal shrink-0">
         <Plus class="h-4 w-4" />
-        <span>Create Worksheet</span>
+        <span>New</span>
       </Button>
     </SheetTrigger>
 
@@ -293,9 +318,9 @@ const generationSteps = [
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="term_1">Quarter 1 / Term 1</SelectItem>
-                  <SelectItem value="term_2">Quarter 2 / Term 2</SelectItem>
-                  <SelectItem value="term_3">Quarter 3 / Term 3</SelectItem>
+                  <SelectItem value="term_1"> Term 1</SelectItem>
+                  <SelectItem value="term_2"> Term 2</SelectItem>
+                  <SelectItem value="term_3">Term 3</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -308,7 +333,7 @@ const generationSteps = [
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="English">English</SelectItem>
-                  <SelectItem value="Filipino">Filipino (Tagalog)</SelectItem>
+                  <SelectItem value="Filipino">Filipino</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -316,11 +341,10 @@ const generationSteps = [
 
           <!-- Topic -->
           <div class="space-y-2">
-            <Label for="topic">Lesson Topic / Concept <span class="text-destructive">*</span></Label>
+            <Label for="topic">Lesson Topic <span class="text-destructive">*</span></Label>
             <Input
               id="topic"
               v-model="form.topic"
-              placeholder="e.g. Types of Rocks, Fractions, Pagiging Magalang sa Kapwa"
               @input="updateAutoTitle"
             />
           </div>
@@ -366,18 +390,35 @@ const generationSteps = [
               id="competency"
               v-model="form.target_competency"
               rows="2"
-              placeholder="e.g. Describe the changes in properties of materials when exposed to certain conditions..."
             />
           </div>
 
           <!-- Custom Instructions -->
           <div class="space-y-2">
-            <Label for="instructions">Teacher Instructions / Special Focus</Label>
+            <Label for="instructions">Instructions (Optional)</Label>
             <Textarea
               id="instructions"
               v-model="form.custom_instructions"
               rows="2"
               placeholder="e.g. Include localized Filipino scenarios, add 2 word problems, keep questions suitable for beginner readers..."
+            />
+          </div>
+
+          <!-- Reference File Upload -->
+          <div class="space-y-2 p-4 bg-muted/30 rounded-lg border">
+            <Label for="referenceFile" class="text-base font-semibold flex items-center gap-2">
+              <BookOpen class="h-4 w-4" />
+              Reference Material (Optional)
+            </Label>
+            <p class="text-xs text-muted-foreground mb-2">
+              Upload a lesson plan, reading material, or syllabus to base the worksheet on. (PDF, DOCX, TXT)
+            </p>
+            <Input
+              id="referenceFile"
+              type="file"
+              accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+              class="h-10 text-xs file:h-full file:bg-transparent file:text-foreground file:text-xs file:font-semibold"
+              @change="handleFileUpload"
             />
           </div>
 

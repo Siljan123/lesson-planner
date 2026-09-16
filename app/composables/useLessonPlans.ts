@@ -1,10 +1,12 @@
 export const useLessonPlans = () => {
   const fetchAll = async () => {
-    return await $fetch('/api/lesson-plans')
+    const headers = useRequestHeaders(['cookie']) as Record<string, string>
+    return await $fetch('/api/lesson-plans', { headers })
   }
 
   const fetchStats = async () => {
-    return await $fetch('/api/lesson-plans/stats')
+    const headers = useRequestHeaders(['cookie']) as Record<string, string>
+    return await $fetch('/api/lesson-plans/stats', { headers })
   }
 
   const generatePlan = async (body: any) => {

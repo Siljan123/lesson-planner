@@ -2,11 +2,13 @@ import type { Worksheet } from '~/types/worksheet'
 
 export const useWorksheets = () => {
   const fetchAll = async () => {
-    return await $fetch<Worksheet[]>('/api/worksheets')
+    const headers = useRequestHeaders(['cookie']) as Record<string, string>
+    return await $fetch<Worksheet[]>('/api/worksheets', { headers })
   }
 
   const fetchById = async (id: string) => {
-    return await $fetch<{ worksheet: Worksheet }>(`/api/worksheets/${id}`)
+    const headers = useRequestHeaders(['cookie']) as Record<string, string>
+    return await $fetch<{ worksheet: Worksheet }>(`/api/worksheets/${id}`, { headers })
   }
 
   const generateWorksheet = async (body: any) => {
@@ -29,8 +31,8 @@ export const useWorksheets = () => {
     })
   }
 
-  const downloadExport = (id: string, title = 'worksheet', includeAnswerKey = true) => {
-    const url = `/api/worksheets/${id}/export?includeAnswerKey=${includeAnswerKey}`
+  const downloadExport = (id: string, title = 'worksheet', includeAnswerKey = true, exportType = 'both') => {
+    const url = `/api/worksheets/${id}/export?includeAnswerKey=${includeAnswerKey}&type=${exportType}`
     const a = document.createElement('a')
     a.href = url
     a.download = `${title.replace(/[^a-zA-Z0-9_-]/g, '_')}.docx`

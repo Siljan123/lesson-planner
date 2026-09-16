@@ -1,14 +1,17 @@
 export const useReferenceData = () => {
   const fetchSubjects = async () => {
-    return await $fetch('/api/subjects')
+    const headers = useRequestHeaders(['cookie']) as Record<string, string>
+    return await $fetch('/api/subjects', { headers })
   }
 
   const fetchGrades = async () => {
-    return await $fetch('/api/grade-levels')
+    const headers = useRequestHeaders(['cookie']) as Record<string, string>
+    return await $fetch('/api/grade-levels', { headers })
   }
 
   const fetchPositions = async () => {
-    return await $fetch('/api/positions')
+    const headers = useRequestHeaders(['cookie']) as Record<string, string>
+    return await $fetch('/api/positions', { headers })
   }
 
   const createSubject = async (payload: { name: string; code?: string }) => {

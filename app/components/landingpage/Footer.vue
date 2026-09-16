@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { GraduationCap, Heart, ShieldCheck, FileText, Sparkles } from '@lucide/vue'
 </script>
 
 <template>
@@ -10,8 +9,10 @@ import { GraduationCap, Heart, ShieldCheck, FileText, Sparkles } from '@lucide/v
           <span>&copy; 2026 Lesson Plan AI</span>
         </p>
         <div class="flex items-center gap-6">
-          <NuxtLink to="/login" class="hover:text-foreground transition-colors">Privacy</NuxtLink>
-          <NuxtLink to="/login" class="hover:text-foreground transition-colors">Terms of Service</NuxtLink>
+           <a href="https://github.com/Siljan123/lesson-planner" target="_blank" rel="noopener noreferrer" class="hover:text-foreground transition-colors flex items-center gap-1.5" title="View Source Code">
+            <Icon name="octicon:lockup-github-16" class="size-4" />
+            <span class="sr-only">GitHub Repository</span>
+          </a>
         </div>
       </div>
     </div>

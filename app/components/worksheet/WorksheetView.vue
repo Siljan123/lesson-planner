@@ -170,9 +170,8 @@ const rubric = computed(() => content.value?.rubric || [])
 
       <!-- Table of Specification (Always shown when printing or toggled) -->
       <div
-        v-if="content.table_of_specification && (showAnswerKey || true)"
+        v-if="content.table_of_specification"
         class="border rounded-lg p-5 bg-card print:border-black print:block mb-6"
-        :class="{ 'hidden print:block': !showAnswerKey }"
       >
         <div class="flex items-center justify-between border-b pb-3 mb-4 print:border-black">
           <div class="flex items-center gap-2">

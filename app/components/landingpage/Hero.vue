@@ -7,8 +7,11 @@ import {
   ShieldCheck,
   FileCheck2,
   FileDown,
-  Clock3
+  Clock3,
+  LayoutDashboard,
 } from '@lucide/vue'
+
+const user = useSupabaseUser()
 
 function scrollToPreview() {
   const el = document.getElementById('demo-preview')
@@ -32,15 +35,33 @@ function scrollToPreview() {
       </NuxtLink>
 
       <div class="flex items-center gap-3">
-        <Button variant="ghost" size="sm" as-child class="hidden sm:inline-flex text-muted-foreground hover:text-foreground">
-          <NuxtLink to="/login">Sign In</NuxtLink>
+        <!-- Open Source Badge -->
+        <Button variant="ghost" size="sm" as-child class="hidden sm:inline-flex gap-1.5 text-muted-foreground hover:text-foreground cursor-pointer">
+          <a href="https://github.com/your-username/lesson-plan-ai" target="_blank" rel="noopener noreferrer">
+            <Icon name="octicon:lockup-github-24" class="size-4" />
+            <span>Open Source</span>
+          </a>
         </Button>
-        <Button size="sm" as-child class="gap-1.5 shadow-sm">
-          <NuxtLink to="/login">
-            <span>Get Started</span>
-            <ArrowRight class="size-3.5" />
-          </NuxtLink>
-        </Button>
+
+        <template v-if="user">
+          <Button size="sm" as-child class="gap-1.5 shadow-sm cursor-pointer">
+            <NuxtLink to="/authenticated/dashboard">
+              <LayoutDashboard class="size-4" />
+              <span>Dashboard</span>
+            </NuxtLink>
+          </Button>
+        </template>
+        <template v-else>
+          <Button variant="ghost" size="sm" as-child class="hidden sm:inline-flex text-muted-foreground hover:text-foreground cursor-pointer">
+            <NuxtLink to="/login">Sign In</NuxtLink>
+          </Button>
+          <Button size="sm" as-child class="gap-1.5 shadow-sm cursor-pointer">
+            <NuxtLink to="/login">
+              <span>Get Started</span>
+              <ArrowRight class="size-3.5" />
+            </NuxtLink>
+          </Button>
+        </template>
       </div>
     </div>
   </header>
@@ -97,8 +118,8 @@ function scrollToPreview() {
             <FileDown class="size-4" />
           </div>
           <div class="text-xs">
-            <p class="font-semibold text-foreground">Word &amp; Worksheets</p>
-            <p class="text-muted-foreground text-[11px]">Ready-to-print .docx &amp; .pptx</p>
+            <p class="font-semibold text-foreground">Worksheets</p>
+            <p class="text-muted-foreground text-[11px]">Ready-to-print .docx</p>
           </div>
         </div>
       </div>

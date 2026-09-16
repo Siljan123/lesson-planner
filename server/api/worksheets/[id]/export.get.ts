@@ -34,12 +34,20 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, message: 'Worksheet not found' })
   }
 
+  const type = query.type as 'worksheet' | 'tos' | 'both' | undefined
+  const exportType = type || 'both'
+
   try {
-    const buffer = await buildWorksheetDocx(worksheet as unknown as Worksheet, includeAnswerKey)
+    const buffer = await buildWorksheetDocx(worksheet as unknown as Worksheet, {
+      includeAnswerKey,
+      exportType
+    })
     const sanitizedTitle = (worksheet.title || 'worksheet')
       .replace(/[^a-zA-Z0-9_-]/g, '_')
       .slice(0, 50)
-    const filename = `${sanitizedTitle}.docx`
+    
+    const suffix = exportType === 'tos' ? '_TOS' : exportType === 'worksheet' ? '_Worksheet' : ''
+    const filename = `${sanitizedTitle}${suffix}.docx`
 
     setHeaders(event, {
       'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
