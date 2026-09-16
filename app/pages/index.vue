@@ -78,6 +78,6 @@ const features = [
     <!-- Interactive Generation Process Preview (Live Simulation) -->
     <GenerationProcessPreview />
     <!-- Landing Page Footer -->
-    <Footer />
+    <LandingpageFooter />
   </div>
 </template>

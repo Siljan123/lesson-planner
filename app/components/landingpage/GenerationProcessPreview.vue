@@ -185,6 +185,7 @@ onUnmounted(() => {
             @touchend="isHovered = false"
           >
             <table class="w-full border-collapse border border-black table-fixed text-[11px] leading-tight">
+              <tbody>
               <!-- Pangalan ng Aralin / Lesson Title -->
               <tr>
                 <td class="border border-black p-2 w-36 sm:w-44 font-bold bg-gray-50 text-gray-900">
@@ -488,7 +489,6 @@ onUnmounted(() => {
                 </td>
               </tr>
 
-              <!-- Signatories Row (Step >= 5) -->
               <tr>
                 <td :colspan="(currentPreset.parsedDays.length || 1) + 1" class="border border-black p-3 bg-gray-50">
                   <div class="flex justify-around items-center text-[10px]">
@@ -516,6 +516,7 @@ onUnmounted(() => {
                   </div>
                 </td>
               </tr>
+              </tbody>
             </table>
           </div>
         </div>

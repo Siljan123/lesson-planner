@@ -37,7 +37,8 @@ export const useProfile = () => {
   async function loadProfile() {
     if (!user.value) return
     try {
-      const data = await $fetch<Database['public']['Tables']['profiles']['Row']>('/api/user/profile')
+      const headers = useRequestHeaders(['cookie']) as Record<string, string>
+      const data = await $fetch<Database['public']['Tables']['profiles']['Row']>('/api/user/profile', { headers })
       if (data) {
         profile.value = {
           full_name: data.full_name,

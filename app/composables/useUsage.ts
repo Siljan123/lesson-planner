@@ -34,7 +34,8 @@ export const useUsage = () => {
     pending.value = true
     error.value = null
     try {
-      const data = await $fetch<UsageData>('/api/user/usage')
+      const headers = useRequestHeaders(['cookie']) as Record<string, string>
+      const data = await $fetch<UsageData>('/api/user/usage', { headers })
       usage.value = data
       return data
     } catch (err: any) {
@@ -48,7 +49,8 @@ export const useUsage = () => {
   const fetchDailyHistory = async () => {
     historyPending.value = true
     try {
-      const data = await $fetch<UsageHistoryData>('/api/user/usage-history')
+      const headers = useRequestHeaders(['cookie']) as Record<string, string>
+      const data = await $fetch<UsageHistoryData>('/api/user/usage-history', { headers })
       history.value = data
       return data
     } catch (err: any) {

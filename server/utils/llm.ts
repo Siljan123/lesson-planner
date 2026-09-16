@@ -255,95 +255,20 @@ Return ONLY valid JSON matching this exact structure:
       }
     } catch (error: any) {
       console.error('[llm] Gemini API Error:', error?.message || error)
+      throw createError({
+        statusCode: 502,
+        message: 'AI Service is currently busy or not responding. Please try again later.'
+      })
     }
+  } else {
+    throw createError({
+      statusCode: 500,
+      message: 'Gemini API Key is not configured.'
+    })
   }
 
-  // Fallback generation if no API key or API call fails:
-  console.log(`[llm] Using robust multi-session fallback for ${targetDays.join(', ')}`)
-  return {
-    content: {
-      intentions: {
-        learning_competency: params.competency || (isEnglish ? `Demonstrate comprehensive understanding of ${params.topic}.` : `Naipamamalas ang masusing pag-unawa sa ${params.topic}.`),
-        content_standards: params.content_standard || (isEnglish ? `Demonstrates understanding of key concepts, principles, and skills in ${params.topic}.` : `Naipamamalas ang pag-unawa sa mahahalagang konsepto, prinsipyo, at kasanayan tungkol sa ${params.topic}.`),
-        performance_standards: params.performance_standard || (isEnglish ? `Is able to apply concepts and skills of ${params.topic} in practical, daily life situations.` : `Nagagamit ang mga konsepto at kasanayan tungkol sa ${params.topic} sa praktikal na sitwasyon sa araw-araw.`),
-        learning_objectives: {
-          cognitive: isEnglish ? `Define, identify, and explain key principles and components of ${params.topic}.` : `Matukoy, maipaliwanag, at mailarawan ang mahahalagang konsepto ng ${params.topic}.`,
-          psychomotor: isEnglish ? `Demonstrate proficiency and accuracy in executing tasks and hands-on exercises related to ${params.topic}.` : `Maipakita nang wasto ang mga gawain at praktikal na pagsasanay na may kaugnayan sa ${params.topic}.`,
-          affective: isEnglish ? `Appreciate the importance of ${params.topic} and exhibit active participation, cooperation, and respect during learning activities.` : `Mapahalagahan ang ${params.topic} at magpakita ng aktibong pakikilahok, pakikipagtulungan, at paggalang sa mga gawain.`
-        },
-        learning_objectives_per_session: targetDays.map((day, index) => ({
-          day,
-          cognitive: progressiveObjective('cognitive', day, index, params.topic, isEnglish),
-          psychomotor: progressiveObjective('psychomotor', day, index, params.topic, isEnglish),
-          affective: progressiveObjective('affective', day, index, params.topic, isEnglish),
-        })),
-        learner_context: isEnglish ? `Learners in ${params.grade} show natural curiosity and learn best through active, hands-on manipulatives, interactive visual games, and contextualized real-life Filipino classroom experiences.` : `Ang mga mag-aaral sa ${params.grade} ay likas na mausisa at higit na natututo sa aktuwal na gawain, kongkretong kagamitan, at mga sitwasyong malapit sa kanilang karanasan.`
-      },
-      learning_experience: {
-        instructional_materials: isEnglish ? ["Visual charts", "Activity worksheets", "Concrete manipulatives", "Flashcards", "Manila paper and markers"] : ["Mga tsart na may larawan", "Mga gawaing papel", "Kongkretong kagamitan", "Flashcard", "Manila paper at pentel pen"],
-        sessions: targetDays.map((day, idx) => ({
-          day,
-          pre_lesson: isEnglish ? `Conduct an energetic readiness check and review for ${day}. Sing a review song and conduct a 3-minute interactive warm-up drill connecting prior knowledge to today's focus.` : `Magsagawa ng masiglang paghahanda at balik-aral para sa ${day}. Umawit ng awiting pagbabalik-aral at magsagawa ng maikling interaktibong warm-up na mag-uugnay sa dating kaalaman at aralin ngayon.`,
-          learning_resources: isEnglish ? `Concrete learning kits, graphic organizers, and illustrated flashcards tailored for ${day}.` : `Kongkretong kagamitan, graphic organizer, at flashcard na may larawan para sa ${day}.`,
-          integration: isEnglish ? `Integrate Language Arts (oral sharing), GMRC (taking turns and active listening), and Art (visual representations).` : `Iugnay sa Wika (pasalitang pagbabahagi), GMRC (paghihintay ng turno at pakikinig), at Sining (biswal na paglalarawan).`,
-          phases: [
-            {
-              phase: isEnglish ? "Engage / Motivation" : "Panimula / Pagganyak",
-              teacher_activity: isEnglish ? `Teacher presents an exciting mystery box / real-life problem scenario related to ${params.topic}. Asks open-ended questions to spark curiosity.` : `Magpapakita ang guro ng mystery box o sitwasyong mula sa tunay na buhay na may kaugnayan sa ${params.topic}. Magtatanong siya ng bukas na tanong upang pukawin ang pag-uusisa.`,
-              learner_activity: isEnglish ? `Learners observe keenly, share predictions enthusiastically, and volunteer answers during the interactive opening discussion.` : `Masusing magmamasid ang mga mag-aaral, masiglang magbabahagi ng hinuha, at sasagot sa panimulang talakayan.`
-            },
-            {
-              phase: isEnglish ? "Explore / Presentation" : "Paggalugad / Paglalahad",
-              teacher_activity: isEnglish ? `Teacher models the primary concept of ${params.topic} step-by-step using concrete visuals and distributes guided activity materials to student pairs.` : `Ipamamalas ng guro nang sunod-sunod ang pangunahing konsepto ng ${params.topic} gamit ang kongkretong biswal at mamamahagi ng gabay na kagamitan sa magkapares na mag-aaral.`,
-              learner_activity: isEnglish ? `Learners work in dyads to manipulate materials, examine patterns, and record initial findings on their activity sheets.` : `Magkapares na gagamitin ng mga mag-aaral ang mga kagamitan, susuriin ang mga padron, at itatala ang unang natuklasan sa activity sheet.`
-            },
-            {
-              phase: isEnglish ? "Experience / Discussion" : "Paglilinang / Talakayan",
-              teacher_activity: isEnglish ? `Teacher facilitates class reporting, validates correct concepts, addresses common misconceptions, and emphasizes core terminology for ${day}.` : `Pangungunahan ng guro ang pag-uulat ng klase, lilinawin ang tamang konsepto, itatama ang karaniwang maling pag-unawa, at bibigyang-diin ang mahahalagang salita para sa ${day}.`,
-              learner_activity: isEnglish ? `Learners present their outputs, compare solutions with peers, and actively participate in the deepening question-and-answer session.` : `Ilalahad ng mga mag-aaral ang kanilang output, ihahambing ang sagot sa kaklase, at aktibong makikilahok sa mas malalim na talakayan.`
-            },
-            {
-              phase: isEnglish ? "Empathize / Application" : "Paglalapat",
-              teacher_activity: isEnglish ? `Teacher provides a contextualized real-life scenario where learners apply what they learned about ${params.topic} to solve a practical challenge.` : `Magbibigay ang guro ng sitwasyong malapit sa tunay na buhay kung saan mailalapat ng mga mag-aaral ang natutuhan tungkol sa ${params.topic}.`,
-              learner_activity: isEnglish ? `Learners collaborate to solve the application challenge, demonstrating mastery, teamwork, and responsible decision-making.` : `Magtutulungan ang mga mag-aaral upang lutasin ang gawaing paglalapat at maipakita ang pagkatuto, pagtutulungan, at responsableng pagpapasya.`
-            }
-          ]
-        }))
-      },
-      assessing_learning: {
-        formative_assessment_per_session: targetDays.map(day => ({
-          day,
-          description: isEnglish ? `5-item formative evaluation and exit ticket assessing key competencies for ${day}.` : `Limang aytem na pormatibong pagtataya at exit ticket upang masukat ang mahahalagang kasanayan para sa ${day}.`,
-          sample_questions: [
-            isEnglish ? `How would you describe the main concept of ${params.topic} in your own words?` : `Paano mo ilalarawan sa sariling salita ang pangunahing konsepto ng ${params.topic}?`,
-            isEnglish ? `Identify which example correctly illustrates the principles discussed in ${day}.` : `Alin sa mga halimbawa ang wastong nagpapakita ng konseptong tinalakay sa ${day}?`,
-            isEnglish ? `Why is understanding ${params.topic} helpful in everyday situations?` : `Bakit mahalagang maunawaan ang ${params.topic} sa pang-araw-araw na buhay?`
-          ]
-        })),
-        summative_assessment: {
-          description: isEnglish ? `Cumulative performance task and rubric-based assessment at the conclusion of the unit.` : `Pinagsama-samang gawaing pagganap at pagtatayang may rubrik sa pagtatapos ng aralin.`
-        }
-      },
-      ways_forward: {
-        extended_learning: isEnglish ? `Encourage learners to observe examples of ${params.topic} at home with family members and share one interesting observation next meeting.` : `Hikayatin ang mga mag-aaral na magmasid ng halimbawa ng ${params.topic} sa bahay kasama ang pamilya at magbahagi ng isang natuklasan sa susunod na pagkikita.`,
-        reflection: {
-          learners_at_mastery: isEnglish ? "Majority of learners (approx. 80-90%) are expected to achieve mastery through active participation." : "Inaasahang makakamit ng karamihan ng mga mag-aaral (80-90%) ang kasanayan sa pamamagitan ng aktibong pakikilahok.",
-          learners_requiring_remediation: isEnglish ? "Struggling learners will be provided with individualized peer tutoring and simplified concrete manipulatives." : "Ang mga nangangailangan ng suporta ay bibigyan ng gabay ng kapwa mag-aaral at pinasimpleng kongkretong kagamitan.",
-          effective_strategies: isEnglish ? "Collaborative dyadic work, visual modeling, and tactile manipulatives proved most effective." : "Naging mabisa ang magkapares na gawain, biswal na pagmomodelo, at kongkretong kagamitan.",
-          challenges_encountered: isEnglish ? "Varying pacing among learners; addressed through differentiated task options." : "Magkakaiba ang bilis ng pagkatuto; tinugunan ito sa pamamagitan ng angkop na pagpipilian sa gawain."
-        },
-        reflection_per_session: targetDays.map(day => ({
-          day,
-          objectives_achieved: null,
-          objectives_not_achieved_reason: '',
-          mastery_count: '',
-          total_count: '',
-          teacher_notes: '',
-        })),
-        remediation: isEnglish ? `Conduct small-group guided practice using simplified cards and tactile aids for targeted reinforcement.` : `Magsagawa ng gabay na pagsasanay sa maliit na pangkat gamit ang pinasimpleng card at kongkretong pantulong na kagamitan.`,
-        enrichment: isEnglish ? `Provide advanced learners with a creative problem-solving extension challenge and peer-facilitator roles.` : `Bigyan ang mabilis matuto ng malikhaing hamon sa paglutas ng suliranin at tungkuling gumabay sa kapwa mag-aaral.`
-      }
-    },
-    usage: { promptTokenCount: 0, candidatesTokenCount: 0, totalTokenCount: 0 }
-  }
+  throw createError({
+    statusCode: 500,
+    message: 'Failed to generate lesson plan. Please try again.'
+  })
 }

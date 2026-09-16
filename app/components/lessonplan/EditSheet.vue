@@ -224,7 +224,7 @@ async function onSubmit() {
 
 <template>
   <Sheet :open="open" @update:open="onOpenChange">
-    <SheetContent class="sm:max-w-2xl overflow-y-auto p-7">
+    <SheetContent class="sm:max-w-4xl overflow-y-auto p-3">
       <SheetHeader>
         <SheetTitle>Quick edit DLL</SheetTitle>
         <SheetDescription>Update essential details and objectives. Use the full editor for lesson activities and assessments.</SheetDescription>
@@ -322,7 +322,7 @@ async function onSubmit() {
 
               <!-- Subject Select -->
               <Select v-else v-model="form.subject_id" @update:model-value="onSubjectChange">
-                <SelectTrigger>
+                <SelectTrigger class="w-full">
                   <SelectValue placeholder="Select subject" />
                 </SelectTrigger>
                 <SelectContent>
@@ -340,7 +340,7 @@ async function onSubmit() {
             <div class="space-y-2">
               <Label>Grade level</Label>
               <Select v-model="form.grade_level_id">
-                <SelectTrigger>
+                <SelectTrigger class="w-full">
                   <SelectValue placeholder="Select grade" />
                 </SelectTrigger>
                 <SelectContent>
@@ -353,7 +353,7 @@ async function onSubmit() {
             <div class="space-y-2">
               <Label>Term</Label>
               <Select v-model="form.term">
-                <SelectTrigger>
+                <SelectTrigger class="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

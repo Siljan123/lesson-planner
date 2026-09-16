@@ -14,7 +14,7 @@ const cellBordersNone = {
   right: noBorder
 }
 
-export async function buildWorksheetDocx(worksheet: Worksheet, includeAnswerKey = true): Promise<Buffer> {
+export async function buildWorksheetDocx(worksheet: Worksheet, options: { includeAnswerKey?: boolean, exportType?: 'worksheet' | 'tos' | 'both' } = {}): Promise<Buffer> {
   const content = worksheet.content as WorksheetContent
   const subjectName = worksheet.subject?.name || 'Subject Area'
   const gradeLabel = worksheet.grade?.label || 'Grade Level'
@@ -243,60 +243,110 @@ export async function buildWorksheetDocx(worksheet: Worksheet, includeAnswerKey 
     }
   }
 
+  // Worksheet Content Children
+  const worksheetChildren: any[] = [...children]
+
+  const tosChildren: any[] = []
   // Table of Specification (TOS)
   if (content.table_of_specification) {
     const tos = content.table_of_specification
-    children.push(
+    
+    tosChildren.push(
       new Paragraph({
-        pageBreakBefore: true,
         alignment: AlignmentType.CENTER,
-        spacing: { after: 120 },
+        children: [
+          new TextRun({
+            text: isEnglish ? 'TERM EXAMINATION IN' : 'PAGSUSULIT SA',
+            bold: true,
+            size: 24,
+            color: '000000'
+          })
+        ]
+      }),
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        children: [
+          new TextRun({
+            text: subjectName.toUpperCase(),
+            bold: true,
+            size: 24,
+            color: '1E40AF' // Blue color
+          })
+        ]
+      }),
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
         children: [
           new TextRun({
             text: isEnglish ? 'TABLE OF SPECIFICATION' : 'TALAAN NG ESPESIPIKASYON',
             bold: true,
-            size: 28,
-            color: '1E3A8A'
+            size: 24,
+            color: '000000'
+          })
+        ]
+      }),
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 240 },
+        children: [
+          new TextRun({
+            text: worksheet.term ? worksheet.term.replace('_', ' ').toUpperCase() : 'TERM 1',
+            bold: true,
+            size: 24,
+            color: '000000'
           })
         ]
       })
     )
 
     const tableRows = []
+    
+    // Helper to create vertical text cell
+    const verticalCell = (text: string) => {
+      return new TableCell({
+        textDirection: 'btLr', // Bottom to top, left to right
+        children: [
+          new Paragraph({
+            alignment: AlignmentType.CENTER,
+            children: [new TextRun({ text, bold: true, size: 18 })]
+          })
+        ]
+      })
+    }
 
     // Header row
     tableRows.push(
       new TableRow({
         children: [
-          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Competencies', bold: true, size: 16 })] })] }),
-          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'No. of Items', bold: true, size: 16 })] })] }),
-          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Remembering', bold: true, size: 14 })] })] }),
-          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Understanding', bold: true, size: 14 })] })] }),
-          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Applying', bold: true, size: 14 })] })] }),
-          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Analyzing', bold: true, size: 14 })] })] }),
-          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Evaluating', bold: true, size: 14 })] })] }),
-          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Creating', bold: true, size: 14 })] })] }),
-          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Test Placement', bold: true, size: 14 })] })] }),
-          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: 'Percentage', bold: true, size: 14 })] })] }),
+          new TableCell({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Competencies', bold: true, size: 18 })] })] }),
+          new TableCell({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'No.\nof\nItems', bold: true, size: 18 })] })] }),
+          verticalCell('Remembering'),
+          verticalCell('Understanding'),
+          verticalCell('Applying'),
+          verticalCell('Analyzing'),
+          verticalCell('Evaluating'),
+          verticalCell('Creating'),
+          verticalCell('Test Placement'),
+          verticalCell('Percentage')
         ]
       })
     )
 
     // Data rows
-    for (const row of tos.competencies) {
+    for (const row of (tos.competencies || [])) {
       tableRows.push(
         new TableRow({
           children: [
-            new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: row.competency, size: 16 })] })] }),
-            new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: String(row.no_of_items), size: 16 })] })] }),
-            new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: String(row.remembering || 0), size: 16 })] })] }),
-            new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: String(row.understanding || 0), size: 16 })] })] }),
-            new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: String(row.applying || 0), size: 16 })] })] }),
-            new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: String(row.analyzing || 0), size: 16 })] })] }),
-            new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: String(row.evaluating || 0), size: 16 })] })] }),
-            new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: String(row.creating || 0), size: 16 })] })] }),
-            new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: row.test_placement, size: 16 })] })] }),
-            new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: row.percentage, size: 16 })] })] }),
+            new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: row.competency, size: 18 })] })] }),
+            new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: String(row.no_of_items), size: 18 })] })] }),
+            new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: String(row.remembering || 0), size: 18 })] })] }),
+            new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: String(row.understanding || 0), size: 18 })] })] }),
+            new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: String(row.applying || 0), size: 18 })] })] }),
+            new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: String(row.analyzing || 0), size: 18 })] })] }),
+            new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: String(row.evaluating || 0), size: 18 })] })] }),
+            new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: String(row.creating || 0), size: 18 })] })] }),
+            new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: row.test_placement, size: 18 })] })] }),
+            new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: row.percentage, size: 18 })] })] }),
           ]
         })
       )
@@ -306,33 +356,65 @@ export async function buildWorksheetDocx(worksheet: Worksheet, includeAnswerKey 
     tableRows.push(
       new TableRow({
         children: [
-          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: isEnglish ? 'TOTAL' : 'KABUUAN', bold: true, size: 16 })] })] }),
-          new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: String(tos.total_items), bold: true, size: 16 })] })] }),
-          new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: String(tos.total_remembering || 0), bold: true, size: 16 })] })] }),
-          new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: String(tos.total_understanding || 0), bold: true, size: 16 })] })] }),
-          new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: String(tos.total_applying || 0), bold: true, size: 16 })] })] }),
-          new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: String(tos.total_analyzing || 0), bold: true, size: 16 })] })] }),
-          new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: String(tos.total_evaluating || 0), bold: true, size: 16 })] })] }),
-          new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: String(tos.total_creating || 0), bold: true, size: 16 })] })] }),
-          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: '', size: 16 })] })] }),
-          new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: '100%', bold: true, size: 16 })] })] }),
+          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: isEnglish ? 'TOTAL' : 'KABUUAN', bold: true, size: 18 })] })] }),
+          new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: String(tos.total_items), bold: true, size: 18 })] })] }),
+          new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: String(tos.total_remembering || 0), bold: true, size: 18 })] })] }),
+          new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: String(tos.total_understanding || 0), bold: true, size: 18 })] })] }),
+          new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: String(tos.total_applying || 0), bold: true, size: 18 })] })] }),
+          new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: String(tos.total_analyzing || 0), bold: true, size: 18 })] })] }),
+          new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: String(tos.total_evaluating || 0), bold: true, size: 18 })] })] }),
+          new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: String(tos.total_creating || 0), bold: true, size: 18 })] })] }),
+          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: '', size: 18 })] })] }),
+          new TableCell({ children: [new Paragraph({ textAlignment: AlignmentType.CENTER, children: [new TextRun({ text: '100%', bold: true, size: 18 })] })] }),
         ]
       })
     )
 
-    children.push(
+    tosChildren.push(
       new Table({
         width: { size: 100, type: WidthType.PERCENTAGE },
         rows: tableRows
       })
     )
+
+    // Signatures block (Borderless Table)
+    tosChildren.push(
+      new Paragraph({ spacing: { before: 480 } }), // Spacing before signatures
+      new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        borders: cellBordersNone,
+        rows: [
+          new TableRow({
+            children: [
+              new TableCell({ borders: cellBordersNone, children: [new Paragraph({ children: [new TextRun({ text: 'Prepared by:', size: 20 })] })] }),
+              new TableCell({ borders: cellBordersNone, children: [new Paragraph({ children: [new TextRun({ text: 'Checked by:', size: 20 })] })] }),
+              new TableCell({ borders: cellBordersNone, children: [new Paragraph({ children: [new TextRun({ text: 'Approved by:', size: 20 })] })] })
+            ]
+          }),
+          new TableRow({
+            children: [
+              new TableCell({ borders: cellBordersNone, children: [new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 400 }, children: [new TextRun({ text: '                                    ', bold: true, size: 20, underline: { type: 'single', color: '000000' } })] })] }),
+              new TableCell({ borders: cellBordersNone, children: [new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 400 }, children: [new TextRun({ text: '                                    ', bold: true, size: 20, underline: { type: 'single', color: '000000' } })] })] }),
+              new TableCell({ borders: cellBordersNone, children: [new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 400 }, children: [new TextRun({ text: '                                    ', bold: true, size: 20, underline: { type: 'single', color: '000000' } })] })] })
+            ]
+          }),
+          new TableRow({
+            children: [
+              new TableCell({ borders: cellBordersNone, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Teacher / Substitute Teacher', size: 18 })] })] }),
+              new TableCell({ borders: cellBordersNone, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Master Teacher', size: 18 })] })] }),
+              new TableCell({ borders: cellBordersNone, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Principal', size: 18 })] })] })
+            ]
+          })
+        ]
+      })
+    )
   }
 
+  const answerKeyChildren: any[] = []
   // 5. Answer Key (Separate Page for Teacher)
-  if (includeAnswerKey && content.answer_key && content.answer_key.length > 0) {
-    children.push(
+  if (options.includeAnswerKey !== false && content.answer_key && content.answer_key.length > 0) {
+    answerKeyChildren.push(
       new Paragraph({
-        pageBreakBefore: true,
         alignment: AlignmentType.CENTER,
         spacing: { after: 120 },
         children: [
@@ -359,7 +441,7 @@ export async function buildWorksheetDocx(worksheet: Worksheet, includeAnswerKey 
     )
 
     for (const keySec of content.answer_key) {
-      children.push(
+      answerKeyChildren.push(
         new Paragraph({
           spacing: { before: 200, after: 80 },
           children: [
@@ -370,7 +452,7 @@ export async function buildWorksheetDocx(worksheet: Worksheet, includeAnswerKey 
 
       if (keySec.items) {
         for (const ans of keySec.items) {
-          children.push(
+          answerKeyChildren.push(
             new Paragraph({
               indent: { left: 300 },
               spacing: { after: 40 },
@@ -387,7 +469,7 @@ export async function buildWorksheetDocx(worksheet: Worksheet, includeAnswerKey 
 
     // Rubric
     if (content.rubric && content.rubric.length > 0) {
-      children.push(
+      answerKeyChildren.push(
         new Paragraph({
           spacing: { before: 280, after: 80 },
           children: [
@@ -402,7 +484,7 @@ export async function buildWorksheetDocx(worksheet: Worksheet, includeAnswerKey 
       )
 
       for (const crit of content.rubric) {
-        children.push(
+        answerKeyChildren.push(
           new Paragraph({
             indent: { left: 300 },
             spacing: { after: 40 },
@@ -416,23 +498,49 @@ export async function buildWorksheetDocx(worksheet: Worksheet, includeAnswerKey 
     }
   }
 
-  const doc = new Document({
-    sections: [
-      {
-        properties: {
-          page: {
-            margin: {
-              top: 720,    // 0.5 in
-              right: 720,
-              bottom: 720,
-              left: 720
-            }
-          }
-        },
-        children
-      }
-    ]
-  })
+  const sections = []
+
+  const exportType = options.exportType || 'both'
+
+  // Section 1: Worksheet (Portrait)
+  if (exportType === 'worksheet' || exportType === 'both') {
+    sections.push({
+      properties: {
+        page: {
+          margin: { top: 720, right: 720, bottom: 720, left: 720 }
+        }
+      },
+      children: worksheetChildren
+    })
+  }
+
+  // Section 2: Answer Key (Portrait)
+  if ((exportType === 'worksheet' || exportType === 'both') && answerKeyChildren.length > 0) {
+    sections.push({
+      properties: {
+        page: {
+          size: { orientation: "portrait" },
+          margin: { top: 720, right: 720, bottom: 720, left: 720 }
+        }
+      },
+      children: answerKeyChildren
+    })
+  }
+
+  // Section 3: TOS (Landscape) - Put at the very last page
+  if ((exportType === 'tos' || exportType === 'both') && tosChildren.length > 0) {
+    sections.push({
+      properties: {
+        page: {
+          size: { orientation: "landscape" },
+          margin: { top: 720, right: 720, bottom: 720, left: 720 }
+        }
+      },
+      children: tosChildren
+    })
+  }
+
+  const doc = new Document({ sections })
 
   return await Packer.toBuffer(doc)
 }
