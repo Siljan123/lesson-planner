@@ -13,12 +13,7 @@ import {
 
 const user = useSupabaseUser()
 
-function scrollToPreview() {
-  const el = document.getElementById('demo-preview')
-  if (el) {
-    el.scrollIntoView({ behavior: 'smooth' })
-  }
-}
+
 </script>
 
 <template>
@@ -37,7 +32,7 @@ function scrollToPreview() {
       <div class="flex items-center gap-3">
         <!-- Open Source Badge -->
         <Button variant="ghost" size="sm" as-child class="hidden sm:inline-flex gap-1.5 text-muted-foreground hover:text-foreground cursor-pointer">
-          <a href="https://github.com/your-username/lesson-plan-ai" target="_blank" rel="noopener noreferrer">
+          <a href="https://github.com/Siljan123/lesson-planner.git" target="_blank" rel="noopener noreferrer">
             <Icon name="octicon:lockup-github-24" class="size-4" />
             <span>Open Source</span>
           </a>
@@ -52,9 +47,6 @@ function scrollToPreview() {
           </Button>
         </template>
         <template v-else>
-          <Button variant="ghost" size="sm" as-child class="hidden sm:inline-flex text-muted-foreground hover:text-foreground cursor-pointer">
-            <NuxtLink to="/login">Sign In</NuxtLink>
-          </Button>
           <Button size="sm" as-child class="gap-1.5 shadow-sm cursor-pointer">
             <NuxtLink to="/login">
               <span>Get Started</span>
