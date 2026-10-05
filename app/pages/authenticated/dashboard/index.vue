@@ -5,6 +5,8 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { FileText, CheckCircle, FileEdit, Archive, Activity, ArrowRight, BarChart3, Gauge, Zap, Timer, Coins, CalendarDays } from '@lucide/vue'
 import AddSheet from '@/components/lessonplan/AddSheet.vue'
 import TokenUsageChart from '@/components/custom/TokenUsageChart.vue'
+import RequestTokensDialog from '@/components/custom/RequestTokensDialog.vue'
+import TokenRequestHistory from '@/components/custom/TokenRequestHistory.vue'
 
 const { fetchStats } = useLessonPlans()
 const {
@@ -14,7 +16,7 @@ const {
   historyPending,
   percentUsed,
   remainingPlans,
-  hoursUntilReset,
+  daysUntilReset,
   isNearLimit,
   isLimitReached,
   usageColor,
@@ -34,6 +36,7 @@ onMounted(async () => {
 })
 
 function formatTokens(n: number): string {
+  if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`
   if (n >= 1000) return `${(n / 1000).toFixed(1)}K`
   return String(n)
 }
@@ -106,14 +109,14 @@ const progressBarBg = computed(() => {
 
       <Card>
         <CardHeader class="flex flex-row items-center justify-between pb-2 space-y-0">
-          <CardTitle class="text-sm font-medium">Today's Usage</CardTitle>
+          <CardTitle class="text-sm font-medium">Monthly Usage</CardTitle>
           <Gauge class="w-4 h-4" :class="usageStatusColor" />
         </CardHeader>
         <CardContent>
           <div class="text-2xl font-bold" :class="usageStatusColor">{{ percentUsed }}%</div>
           <div class="flex items-center justify-between mt-1">
             <p class="text-xs text-muted-foreground">
-              {{ formatTokens(usage?.used ?? 0) }} / {{ formatTokens(usage?.limit ?? 200000) }} tokens
+              {{ formatTokens(usage?.used ?? 0) }} / {{ formatTokens(usage?.limit ?? 100000) }} tokens
             </p>
           </div>
           <div class="h-1.5 rounded-full mt-2 overflow-hidden" :class="progressBarBg">
@@ -157,13 +160,13 @@ const progressBarBg = computed(() => {
 
       <Card>
         <CardHeader class="flex flex-row items-center justify-between pb-2 space-y-0">
-          <CardTitle class="text-sm font-medium">TPD (Tokens Per Day)</CardTitle>
+          <CardTitle class="text-sm font-medium">TPM (Tokens Per Month)</CardTitle>
           <CalendarDays class="w-4 h-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div class="text-2xl font-bold">200K <span class="text-sm font-normal text-muted-foreground">(App Limit)</span></div>
+          <div class="text-2xl font-bold">{{ formatTokens(usage?.limit ?? 100000) }} <span class="text-sm font-normal text-muted-foreground">(App Limit)</span></div>
           <p class="text-xs text-muted-foreground mt-1">
-            AI Studio allows 1,500 requests/day. We limit to 200K tokens/day to prevent abuse.
+            AI Studio allows 1,500 requests/day. We enforce a free monthly 100k token limit to manage resources.
           </p>
         </CardContent>
       </Card>
@@ -186,7 +189,7 @@ const progressBarBg = computed(() => {
           <TokenUsageChart
             v-else-if="history"
             :history="history.history"
-            :daily-limit="history.dailyLimit"
+            :monthly-limit="history.monthlyLimit"
           />
           <div v-else class="h-[200px] flex items-center justify-center text-muted-foreground text-sm">
             No usage data available
@@ -199,14 +202,14 @@ const progressBarBg = computed(() => {
         <CardHeader>
           <CardTitle class="flex items-center gap-2">
             <Zap class="w-5 h-5" />
-            Today's Summary
+            Quota Summary
           </CardTitle>
         </CardHeader>
         <CardContent class="space-y-4">
           <!-- Reset info -->
           <div class="space-y-1">
             <p class="text-sm text-muted-foreground">Quota Resets In</p>
-            <p class="text-lg font-semibold">{{ hoursUntilReset }} hours</p>
+            <p class="text-lg font-semibold">{{ daysUntilReset }} days</p>
           </div>
 
           <div
@@ -217,9 +220,13 @@ const progressBarBg = computed(() => {
                 ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
                 : 'bg-green-500/10 text-brand dark:text-green-400'"
           >
-            <span v-if="isLimitReached"> Daily limit reached</span>
-            <span v-else-if="isNearLimit"> Approaching daily limit</span>
+            <span v-if="isLimitReached"> Monthly limit reached</span>
+            <span v-else-if="isNearLimit"> Approaching monthly limit</span>
             <span v-else> Usage is normal</span>
+          </div>
+
+          <div class="pt-2">
+            <RequestTokensDialog class="w-full" />
           </div>
         </CardContent>
       </Card>
@@ -250,6 +257,9 @@ const progressBarBg = computed(() => {
           </div>
         </CardContent>
       </Card>
+      
+      <!-- Token Request History -->
+      <TokenRequestHistory />
     </div>
   </div>
 </template>

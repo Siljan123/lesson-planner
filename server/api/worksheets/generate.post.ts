@@ -1,4 +1,4 @@
-import { serverSupabaseClient } from '#supabase/server'
+import { serverSupabaseClient, serverSupabaseServiceRole } from '#supabase/server'
 import type { Database } from '~~/shared/types/database.types'
 import { generateWorksheetContent } from '~~/server/utils/worksheet-llm'
 
@@ -40,6 +40,17 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  // --- QUOTA CHECK ---
+  const supabaseAdmin = serverSupabaseServiceRole<Database>(event)
+  const quota = await checkAndResetQuota(userId, supabaseAdmin)
+  if (!quota.hasQuota) {
+    throw createError({
+      statusCode: 429,
+      message: `Monthly token limit of ${quota.limit.toLocaleString()} reached. Please contact an admin or wait until your quota resets on ${quota.resetDate?.toLocaleDateString()}.`
+    })
+  }
+  // -------------------
+
   // Optional aligned lesson plan context
   let lessonPlanContext = null
   if (body.lesson_plan_id) {
@@ -65,8 +76,13 @@ export default defineEventHandler(async (event) => {
     custom_instructions: body.custom_instructions || undefined,
     lesson_plan_context: lessonPlanContext,
     include_tos: body.include_tos === true,
-    reference_file: body.reference_file
+    reference_file: body.reference_file,
+    ai_model: body.ai_model || undefined,
   })
+  // Consume tokens used
+  if (result.usage?.totalTokenCount) {
+    await consumeTokens(userId, result.usage.totalTokenCount, supabaseAdmin)
+  }
 
   // Insert into DB
   const { data: worksheet, error: insertErr } = await supabase
@@ -84,9 +100,9 @@ export default defineEventHandler(async (event) => {
       status: 'draft',
       content: result.content as any,
       ai_use_declaration: {
-        tool: 'Gemini 3.6 Flash',
+        tool: result.modelLabel || 'Gemini Flash',
         medium_of_instruction: mediumOfInstruction,
-        model: 'gemini-3.6-flash',
+        model: result.model || 'gemini-flash',
         teacher_verified: false,
         token_usage: result.usage || null
       } as any

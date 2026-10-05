@@ -1,3 +1,17 @@
+/**
+ * @deprecated This file contains the LEGACY ILAWContent type from the initial
+ * prototype. It is NOT used by the current AI generation pipeline.
+ *
+ * The authoritative types are:
+ *   - App types:       app/types/lesson-plan.ts → IlawContent
+ *   - Zod validation:  server/utils/lesson-plan-schema.ts → ilawContentSchema
+ *   - AI response:     server/utils/lesson-plan-response-schema.ts → buildResponseSchema()
+ *
+ * This file is kept only for backward compatibility with any code that may
+ * still import from it. Do NOT add new fields here — update the authoritative
+ * files listed above instead.
+ */
+
 export interface ILAWContent {
   intentions: {
     learning_competency: string;
@@ -25,7 +39,6 @@ export interface LessonPlan {
   owner_id: string;
   subject_id: string;
   grade_level_id: string;
-  template_id: string;
   title: string;
   term: 'term_1' | 'term_2' | 'term_3';
   matatag_competency_code: string;

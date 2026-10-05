@@ -57,7 +57,13 @@ export default defineEventHandler(async (event) => {
   processData(lessonPlans)
   processData(worksheets)
 
-  const DAILY_LIMIT = 200000
+  const { data: quota } = await supabase
+    .from('user_token_quotas')
+    .select('token_limit')
+    .eq('user_id', userId)
+    .single()
+
+  const MONTHLY_LIMIT = quota?.token_limit ?? 100000
 
   const history = Array.from(dailyMap.entries()).map(([date, data]) => ({
     date,
@@ -67,6 +73,6 @@ export default defineEventHandler(async (event) => {
 
   return {
     history,
-    dailyLimit: DAILY_LIMIT,
+    monthlyLimit: MONTHLY_LIMIT,
   }
 })

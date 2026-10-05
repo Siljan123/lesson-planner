@@ -2,6 +2,7 @@
 import { ref, watch, onMounted } from 'vue'
 import { useSupabaseClient, useSupabaseUser, navigateTo, useRouter, useRoute } from '#imports'
 import { Loader2, Mail, Lock, Eye, EyeOff, GraduationCap } from '@lucide/vue'
+import { toast } from 'vue-sonner'
 
 const supabase = useSupabaseClient()
 const user = useSupabaseUser()
@@ -47,7 +48,7 @@ async function handleAuth() {
         password: password.value,
       })
       if (error) throw error
-      alert('Sign up successful! You can now log in.')
+      toast.success('Sign up successful! You can now log in.')
       isSignUp.value = false
       isLoading.value = false
     } else {

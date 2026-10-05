@@ -1,4 +1,4 @@
-import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
+import { serverSupabaseClient, serverSupabaseUser, serverSupabaseServiceRole } from '#supabase/server'
 import type { Database } from '~~/shared/types/database.types'
 
 export default defineEventHandler(async (event) => {
@@ -27,15 +27,23 @@ export default defineEventHandler(async (event) => {
   const { data: grade, error: gradeErr } = await supabase.from('grade_levels').select('label').eq('id', body.grade_level_id).single()
   console.log('[generate] Step 3b - Grade:', grade, 'Error:', gradeErr)
 
-  const { data: template, error: templateErr } = await supabase.from('templates').select('id, structure').eq('is_default', true).single()
-  console.log('[generate] Step 3c - Template:', template?.id, 'Error:', templateErr)
-
-  if (!subject || !grade || !template) {
+  if (!subject || !grade) {
     throw createError({
       statusCode: 400,
-      message: `Invalid reference data. Subject: ${JSON.stringify(subjectErr)}, Grade: ${JSON.stringify(gradeErr)}, Template: ${JSON.stringify(templateErr)}`
+      message: `Invalid reference data. Subject: ${JSON.stringify(subjectErr)}, Grade: ${JSON.stringify(gradeErr)}`
     })
   }
+
+  // --- QUOTA CHECK ---
+  const supabaseAdmin = serverSupabaseServiceRole<Database>(event)
+  const quota = await checkAndResetQuota(userId, supabaseAdmin)
+  if (!quota.hasQuota) {
+    throw createError({
+      statusCode: 429,
+      message: `Monthly token limit of ${quota.limit.toLocaleString()} reached. Please contact an admin or wait until your quota resets on ${quota.resetDate?.toLocaleDateString()}.`
+    })
+  }
+  // -------------------
 
   // Step 4: Generate content via LLM
   try {
@@ -53,6 +61,7 @@ export default defineEventHandler(async (event) => {
       section_to_regenerate: body.section_to_regenerate || undefined,
       custom_instructions: body.custom_instructions || undefined,
       existing_plan: body.existing_plan || undefined,
+      ai_model: body.ai_model || undefined,
     })
     
     const mediumOfInstruction = body.medium_of_instruction || 'Filipino'
@@ -94,7 +103,16 @@ export default defineEventHandler(async (event) => {
       signatory: signatoryData
     }
     const tokenUsage = result.usage
+    const qualityWarnings = result.qualityWarnings || []
     console.log('[generate] Step 4 - LLM returned tokens:', tokenUsage)
+    if (qualityWarnings.length > 0) {
+      console.warn(`[generate] Step 4 - Quality warnings (${qualityWarnings.length}):`, qualityWarnings)
+    }
+
+    // Consume tokens used
+    if (tokenUsage?.totalTokenCount) {
+      await consumeTokens(userId, tokenUsage.totalTokenCount, supabaseAdmin)
+    }
 
     // Step 5: Insert into database
     console.log('[generate] Step 5 - Inserting into database...')
@@ -102,7 +120,6 @@ export default defineEventHandler(async (event) => {
       owner_id: userId,
       subject_id: body.subject_id,
       grade_level_id: body.grade_level_id,
-      template_id: template.id,
       title: body.title,
       term: body.term,
       matatag_competency_code: body.matatag_competency_code || null,
@@ -112,7 +129,7 @@ export default defineEventHandler(async (event) => {
       status: 'draft',
       content: generatedContent,
       ai_use_declaration: {
-        tool: "Gemini 3.6 Flash",
+        tool: result.modelLabel || "Gemini Flash",
         medium_of_instruction: mediumOfInstruction,
         sections_ai_assisted: ["Intentions", "Learning Experience", "Assessing Learning", "Ways Forward"],
         teacher_verified: false,

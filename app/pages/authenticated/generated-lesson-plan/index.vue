@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useAsyncData } from '#imports'
+import { toast } from 'vue-sonner'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -142,7 +143,7 @@ async function handleDelete(plan: any) {
       await refresh()
     } catch (err) {
       console.error(err)
-      alert('Failed to delete lesson plan')
+      toast.error('Failed to delete lesson plan')
     } finally {
       isDeleting.value = null
     }
@@ -159,7 +160,7 @@ async function handleBulkDelete() {
       await refresh()
     } catch (err) {
       console.error(err)
-      alert('Failed to delete some lesson plans')
+      toast.error('Failed to delete some lesson plans')
     } finally {
       isDeleting.value = null
     }
@@ -180,10 +181,11 @@ function formatDate(dateStr: string) {
     <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
       <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
         <div class="relative w-full sm:w-auto flex-1 min-w-[150px]">
+          <Search class="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
           <Input
             v-model="search"
-            class="h-8 w-full sm:w-44 text-[13px] border-gray-200 rounded-md bg-transparent placeholder:text-gray-400 focus:ring-0 focus:border-gray-300"
-            placeholder="Filter lesson plans..."
+            class="h-8 w-full sm:w-44 pl-8 text-[13px] border-border rounded-md bg-transparent placeholder:text-muted-foreground focus:ring-0 focus:border-border"
+            placeholder="Search..."
           />
         </div>
         <DropdownMenu>

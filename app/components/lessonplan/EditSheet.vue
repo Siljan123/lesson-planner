@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem, SelectSeparator } from '@/components/ui/select'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet'
 import { Loader2, Sparkles, RotateCw, Plus, PlusCircle, X, AlertCircle } from '@lucide/vue'
+import { toast } from 'vue-sonner'
 
 const props = defineProps<{ open: boolean; plan: any }>()
 const emit = defineEmits(['update:open', 'updated'])
@@ -158,7 +159,7 @@ async function regenerateObjectives() {
       form.value.affective = obj.affective || form.value.affective
     }
   } catch (err: any) {
-    alert('Failed to regenerate objectives: ' + (err.data?.message || err.message || 'Unknown error'))
+    toast.error('Failed to regenerate objectives: ' + (err.data?.message || err.message || 'Unknown error'))
   } finally {
     isRegeneratingObjectives.value = false
   }
@@ -183,7 +184,7 @@ async function regenerateFullPlan() {
     onOpenChange(false)
     emit('updated')
   } catch (err: any) {
-    alert('Failed to regenerate lesson plan: ' + (err.data?.message || err.message || 'Unknown error'))
+    toast.error('Failed to regenerate lesson plan: ' + (err.data?.message || err.message || 'Unknown error'))
   } finally {
     isRegeneratingPlan.value = false
   }
@@ -215,7 +216,7 @@ async function onSubmit() {
     onOpenChange(false)
     emit('updated')
   } catch (error: any) {
-    alert('Failed to update lesson plan: ' + (error.data?.message || error.message || 'Unknown error'))
+    toast.error('Failed to update lesson plan: ' + (error.data?.message || error.message || 'Unknown error'))
   } finally {
     isUpdating.value = false
   }

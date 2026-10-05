@@ -58,7 +58,7 @@ async function onSubmit() {
         <div class="space-y-2">
           <Label for="role">Role</Label>
           <Select v-model="form.role" required>
-            <SelectTrigger id="role">
+            <SelectTrigger class="w-full" id="role">
               <SelectValue placeholder="Select a role" />
             </SelectTrigger>
             <SelectContent>

@@ -6,6 +6,7 @@ interface UsageData {
   percentage: number
   resetTime: string
   isLimitReached: boolean
+  daysUntilReset: number
 }
 
 interface DailyUsageEntry {
@@ -16,7 +17,7 @@ interface DailyUsageEntry {
 
 interface UsageHistoryData {
   history: DailyUsageEntry[]
-  dailyLimit: number
+  monthlyLimit: number
 }
 
 // Avg tokens per lesson plan generation (Gemini 3.6 Flash ILAW)
@@ -87,12 +88,8 @@ export const useUsage = () => {
     return Math.floor(remainingTokens.value / AVG_TOKENS_PER_PLAN)
   })
 
-  const hoursUntilReset = computed(() => {
-    if (!usage.value?.resetTime) return 0
-    const reset = new Date(usage.value.resetTime)
-    const now = new Date()
-    const diffHours = Math.max(0, (reset.getTime() - now.getTime()) / (1000 * 60 * 60))
-    return Math.ceil(diffHours)
+  const daysUntilReset = computed(() => {
+    return usage.value?.daysUntilReset ?? 0
   })
 
   const isNearLimit = computed(() => percentUsed.value >= 80)
@@ -126,7 +123,7 @@ export const useUsage = () => {
     percentUsed,
     remainingTokens,
     remainingPlans,
-    hoursUntilReset,
+    daysUntilReset,
     isNearLimit,
     isLimitReached,
     usageColor,

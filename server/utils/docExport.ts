@@ -707,11 +707,47 @@ export async function exportPptx(plan: LessonPlan, langOverride?: string): Promi
   const slide3 = pres.addSlide()
   slide3.addText(isEng ? 'II. Learning Experience' : 'II. Karanasan sa Pagkatuto (Learning Experience)', { x: 0.5, y: 0.5, w: 9, fontSize: 28, bold: true })
   let yOffset = 1.5
-  const phases = plan.content.learning_experience?.phases || []
-  phases.forEach(a => {
-    slide3.addText(`${a.phase}: ${a.title || ''}`, { x: 0.5, y: yOffset, w: 9, fontSize: 18 })
-    yOffset += 1.5
-  })
+ const sessions = plan.content.learning_experience?.sessions ?? []
+
+const phases: Array<{
+  sessionDay?: string | number
+  phase?: string
+  teacher_activity?: string
+  learner_activity?: string
+  [key: string]: any
+}> =
+  sessions.length > 0
+    ? sessions.flatMap(session =>
+        (session.phases ?? []).map(phase => ({
+          ...phase,
+          sessionDay: session.day,
+        }))
+      )
+    : (plan.content.learning_experience?.phases ?? []).map(phase => ({
+        ...phase,
+      }))
+
+    phases.forEach(phase => {
+      slide3.addText(
+        `${phase.sessionDay ? `${phase.sessionDay} — ` : ''}${phase.phase ?? ''}`,
+        { x: 0.5, y: yOffset, w: 9, fontSize: 18, bold: true }
+      )
+      yOffset += 0.4
+
+      if (phase.teacher_activity) {
+        slide3.addText(`Teacher: ${phase.teacher_activity}`, {
+          x: 0.7, y: yOffset, w: 8.6, fontSize: 14,
+        })
+        yOffset += 0.7
+      }
+
+      if (phase.learner_activity) {
+        slide3.addText(`Learners: ${phase.learner_activity}`, {
+          x: 0.7, y: yOffset, w: 8.6, fontSize: 14,
+        })
+        yOffset += 0.7
+      }
+    })
 
   const buffer = await pres.write({ outputType: 'nodebuffer' })
   return buffer as Buffer

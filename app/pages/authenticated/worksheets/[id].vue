@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router'
+import { toast } from 'vue-sonner'
 import {
   ArrowLeft,
   Save,
@@ -77,7 +78,7 @@ async function handleSave() {
     await refresh()
   } catch (err) {
     console.error('Save failed:', err)
-    alert('Failed to save worksheet changes')
+    toast.error('Failed to save worksheet changes')
   } finally {
     isSaving.value = false
   }
@@ -93,7 +94,7 @@ async function handleDelete() {
     router.push('/authenticated/worksheets')
   } catch (err) {
     console.error('Delete failed:', err)
-    alert('Failed to delete worksheet')
+    toast.error('Failed to delete worksheet')
     isDeleting.value = false
   }
 }
@@ -157,29 +158,7 @@ function handleDownloadTOS() {
 
 <template>
   <div class="space-y-6 max-w-5xl mx-auto py-6">
-    <!-- Top Action Bar (hidden in print) -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 print:hidden border-b pb-4">
-      <div class="flex items-center gap-3">
-        <Button variant="ghost" size="icon" as-child class="cursor-pointer">
-          <NuxtLink to="/authenticated/worksheets">
-            <ArrowLeft class="h-4 w-4" />
-          </NuxtLink>
-        </Button>
-        <div>
-          <div class="flex items-center gap-2">
-            <h1 class="text-xl font-bold tracking-tight text-foreground truncate max-w-md sm:max-w-lg">
-              {{ editableTitle || 'Worksheet' }}
-            </h1>
-            <Badge variant="outline" class="text-xs shrink-0 capitalize">
-              {{ editableStatus }}
-            </Badge>
-          </div>
-          <p class="text-xs text-muted-foreground mt-0.5">
-            {{ worksheet?.subject?.name }} • {{ worksheet?.grade?.label }} • {{ worksheet?.medium_of_instruction || 'English' }}
-          </p>
-        </div>
-      </div>
-
       <div class="flex flex-wrap items-center gap-2 sm:justify-end">
         <!-- Status Select -->
         <Select v-model="editableStatus" @update:model-value="handleSave">
@@ -209,18 +188,6 @@ function handleDownloadTOS() {
           <CheckCircle2 v-else-if="saveSuccess" class="h-3.5 w-3.5 text-emerald-400" />
           <Save v-else class="h-3.5 w-3.5" />
           <span>{{ saveSuccess ? 'Saved' : 'Save' }}</span>
-        </Button>
-
-        <!-- Delete -->
-        <Button
-          variant="ghost"
-          size="icon"
-          class="h-8 w-8 text-destructive hover:bg-destructive/10 cursor-pointer"
-          :disabled="isDeleting"
-          @click="handleDelete"
-        >
-          <Loader2 v-if="isDeleting" class="h-3.5 w-3.5 animate-spin" />
-          <Trash2 v-else class="h-3.5 w-3.5" />
         </Button>
       </div>
     </div>

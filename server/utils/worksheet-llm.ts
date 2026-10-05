@@ -1,6 +1,12 @@
 import type { WorksheetContent } from '~~/app/types/worksheet'
 import { PDFParse as pdfParse } from 'pdf-parse'
 import mammoth from 'mammoth'
+import { callOpenAI, type OpenAIModel } from './openai-client'
+import { callGemini, type GeminiModel } from './gemini-client'
+
+function isGeminiModel(model: string): model is GeminiModel {
+  return model.startsWith('gemini-')
+}
 
 export async function generateWorksheetContent(params: {
   subject: string
@@ -13,8 +19,9 @@ export async function generateWorksheetContent(params: {
   lesson_plan_context?: any
   include_tos?: boolean
   reference_file?: { name: string; type: string; base64: string }
-}): Promise<{ content: WorksheetContent; usage?: any }> {
-  const apiKey = process.env.GEMINI_API_KEY
+  /** Optional: 'gpt-6-luna' | 'gpt-5.6-luna' — defaults to Gemini if omitted */
+  ai_model?: string
+}): Promise<{ content: WorksheetContent; usage?: any; model?: string; modelLabel?: string }> {
   const isEnglish = params.medium_of_instruction === 'English'
   const lang = isEnglish ? 'English' : 'Filipino'
 
@@ -23,7 +30,8 @@ export async function generateWorksheetContent(params: {
     try {
       const buffer = Buffer.from(params.reference_file.base64, 'base64')
       if (params.reference_file.type === 'application/pdf') {
-        const pdfData = await pdfParse(buffer)
+        const parser = new pdfParse({ data: buffer })
+        const pdfData = await parser.getText()
         referenceText = pdfData.text
       } else if (params.reference_file.type.includes('wordprocessingml.document')) {
         const result = await mammoth.extractRawText({ buffer })
@@ -38,7 +46,28 @@ export async function generateWorksheetContent(params: {
   }
 
   const prompt = `You are an expert Department of Education (DepEd) Philippines Master Teacher and Learning Materials Specialist.
-Create a comprehensive, student-ready, pedagogically rigorous Learning Activity Sheet (Worksheet / Gawaing Papel) under the DepEd MATATAG Curriculum.
+
+WORKSHEET WRITING RULES
+
+The generated content must read as a completed, student-ready Learning Activity Sheet,
+not as instructions from an AI assistant to a teacher.
+
+DO:
+- Write directly for the learner.
+- Make directions clear, concise, and age-appropriate.
+- Use concrete questions and activities related to the competency.
+- Ensure every activity produces an observable learner response.
+- Make examples specific to the subject, grade level, and topic.
+- Use realistic Philippine classroom and community contexts when appropriate.
+
+DO NOT:
+- Address the teacher directly.
+- Tell the teacher how to conduct the activity.
+- Include teacher-training advice.
+- Add explanations about how the worksheet was designed.
+- Generate generic activities unrelated to the target competency.
+
+The worksheet must be ready for a learner to receive, read, and answer.
 
 Subject: ${params.subject}
 Grade Level: ${params.grade}
@@ -194,50 +223,50 @@ Return ONLY a valid JSON object matching this EXACT STRUCTURE. (ADJUST the numbe
   }` : ''}
 }`
 
-  if (apiKey) {
-    try {
-      console.log(`[worksheet-llm] Requesting Gemini 3.6 Flash for topic: ${params.topic}...`)
-      const response: any = await $fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: {
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            responseMimeType: 'application/json',
-          }
-        }
-      })
+  const model = params.ai_model || 'gpt-6-luna'
+  console.log(`[worksheet-llm] Requesting ${model} for topic: ${params.topic}...`)
 
-      const text = response?.candidates?.[0]?.content?.parts?.[0]?.text
-      if (text) {
-        try {
-          const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim()
-          const parsed: WorksheetContent = JSON.parse(cleanText)
-          console.log(`[worksheet-llm] Gemini successfully generated worksheet with ${parsed?.sections?.length || 0} sections!`)
-          return {
-            content: parsed,
-            usage: response?.usageMetadata || null
-          }
-        } catch (parseErr) {
-          console.error('[worksheet-llm] JSON parse failed, dumping text to console:', text)
-          throw createError({
-            statusCode: 500,
-            message: 'AI returned an invalid format. Please try again.'
-          })
-        }
+  const fullPrompt = `${prompt}\n\nIMPORTANT: Return ONLY a valid JSON object — no markdown fences, no extra text.`
+
+  let response: { text: string; model: string; modelLabel: string; usage: any; raw: any }
+
+  if (isGeminiModel(model)) {
+    response = await callGemini({
+      userPrompt: fullPrompt,
+      model,
+      maxOutputTokens: 8192,
+      timeoutMs: 90000,
+      responseFormat: 'json',
+    })
+  } else {
+    response = await callOpenAI({
+      userPrompt: fullPrompt,
+      model: model as OpenAIModel,
+      maxOutputTokens: 8192,
+      timeoutMs: 90000,
+      responseFormat: 'json_object',
+    })
+  }
+
+  const text = response.text
+  if (text) {
+    try {
+      const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim()
+      const parsed: WorksheetContent = JSON.parse(cleanText)
+      console.log(`[worksheet-llm] ${response.modelLabel} successfully generated worksheet with ${parsed?.sections?.length || 0} sections!`)
+      return {
+        content: parsed,
+        usage: response.usage || null,
+        model: response.model,
+        modelLabel: response.modelLabel,
       }
-    } catch (err: any) {
-      console.error('[worksheet-llm] Error calling Gemini API:', err)
+    } catch (parseErr) {
+      console.error('[worksheet-llm] JSON parse failed, dumping text to console:', text)
       throw createError({
-        statusCode: 502,
-        message: 'AI Service is currently busy or not responding. Please try again later.'
+        statusCode: 500,
+        message: 'AI returned an invalid format. Please try again.'
       })
     }
-  } else {
-    throw createError({
-      statusCode: 500,
-      message: 'Gemini API Key is not configured.'
-    })
   }
   
   throw createError({
