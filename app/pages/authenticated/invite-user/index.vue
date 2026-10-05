@@ -1,14 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import DataTable from '~/components/invite-user/DataTable.vue'
-import InviteUserDialog from '~/components/invite-user/InviteUserDialog.vue'
 import PendingTokenRequests from '~/components/invite-user/PendingTokenRequests.vue'
 
 definePageMeta({
   middleware: 'admin'
 })
-
-const inviteDialogOpen = ref(false)
 
 const { data: users, refresh: refreshUsers } = await useFetch('/api/invite-user')
 const { data: requests, refresh: refreshRequests } = await useFetch('/api/token-requests')
@@ -49,10 +46,5 @@ function handleRefresh() {
         <PendingTokenRequests @refresh="handleRefresh" />
       </TabsContent>
     </Tabs>
-
-    <InviteUserDialog 
-      v-model:open="inviteDialogOpen" 
-      @success="handleRefresh"
-    />
   </div>
 </template>

@@ -1,6 +1,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { toast } from 'vue-sonner'
 
 const props = defineProps<{
   open: boolean
@@ -14,6 +15,7 @@ const emit = defineEmits<{
 const loading = ref(false)
 const form = ref({
   email: '',
+  full_name: '',
   role: 'teacher',
 })
 
@@ -23,16 +25,20 @@ async function onSubmit() {
     await $fetch('/api/invite-user', {
       method: 'POST',
       body: {
-        ...form.value,
+        email: form.value.email,
+        full_name: form.value.full_name?.trim() || undefined,
+        role: form.value.role,
         redirectTo: `${window.location.origin}/auth/confirm`
       }
     })
+    toast.success(`Invitation sent to ${form.value.email}`)
     emit('success')
     emit('update:open', false)
-    form.value = { email: '', role: 'teacher' }
-  } catch (error) {
-    alert('Failed to invite user. Check console for details.')
-    console.error(error)
+    form.value = { email: '', full_name: '', role: 'teacher' }
+  } catch (error: any) {
+    const msg = error?.data?.message || error?.data?.statusMessage || error?.message || 'Failed to invite user.'
+    toast.error(msg)
+    console.error('Invite error:', error)
   } finally {
     loading.value = false
   }
@@ -52,7 +58,12 @@ async function onSubmit() {
       <form @submit.prevent="onSubmit" class="space-y-4 pt-2">
         <div class="space-y-2">
           <Label for="email">Email</Label>
-          <Input id="email" v-model="form.email" type="email" required />
+          <Input id="email" v-model="form.email" type="email" placeholder="name@example.com" required />
+        </div>
+
+        <div class="space-y-2">
+          <Label for="full_name">Full Name <span class="text-xs text-muted-foreground font-normal">(Optional)</span></Label>
+          <Input id="full_name" v-model="form.full_name" placeholder="First and last name" />
         </div>
      
         <div class="space-y-2">

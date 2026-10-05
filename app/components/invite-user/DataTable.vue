@@ -97,12 +97,8 @@ watch(pageSize, () => {
 
 const inviteDialogOpen = ref(false)
 
-const { data: users, refresh: refreshUsers } = await useFetch('/api/invite-user')
-const { data: requests, refresh: refreshRequests } = await useFetch('/api/token-requests')
-
 function handleRefresh() {
-  refreshUsers()
-  refreshRequests()
+  emit('refresh')
 }
 </script>
 
