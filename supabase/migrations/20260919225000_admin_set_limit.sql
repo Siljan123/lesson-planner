@@ -1,0 +1,1 @@
+﻿CREATE OR REPLACE FUNCTION public.admin_set_token_limit(p_user_id uuid, p_limit int) RETURNS void LANGUAGE plpgsql SECURITY DEFINER AS $$ BEGIN UPDATE public.user_token_quotas SET token_limit = p_limit, updated_at = now() WHERE user_id = p_user_id; END; $$;

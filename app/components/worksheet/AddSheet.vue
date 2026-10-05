@@ -6,10 +6,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem, SelectSeparator } from '@/components/ui/select'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger, SheetFooter, SheetClose } from '@/components/ui/sheet'
 import { Checkbox } from '@/components/ui/checkbox'
-import { CheckCircle2, Loader2, Plus, Sparkles, AlertCircle, BookOpen } from '@lucide/vue'
+import { CheckCircle2, Loader2, Plus, Minus, Sparkles, AlertCircle, BookOpen } from '@lucide/vue'
 
 const router = useRouter()
 const { fetchSubjects, fetchGrades } = useReferenceData()
@@ -43,8 +43,28 @@ const form = ref({
   q_multiple_choice: 10,
   q_true_false: 0,
   q_fill_in_blank: 0,
-  q_essay: 0
+  q_essay: 0,
+  ai_model: 'gpt-6-luna' as 'gpt-6-luna' | 'gpt-5.6-luna' | 'gemini-3.7-flash' | 'gemini-3.6-flash' | 'gemini-3.5-flash-lite' | 'gemini-3.1-flash-lite'
 })
+
+const tosCompetencyInputs = ref<string[]>([])
+
+function onToggleTos(checked: boolean) {
+  form.value.include_tos = checked
+  if (checked && tosCompetencyInputs.value.length === 0) {
+    tosCompetencyInputs.value.push('')
+  }
+}
+
+function addCompetency() {
+  tosCompetencyInputs.value.push('')
+}
+
+function removeCompetency(index: number) {
+  if (tosCompetencyInputs.value.length > 1) {
+    tosCompetencyInputs.value.splice(index, 1)
+  }
+}
 
 const emit = defineEmits(['created'])
 
@@ -150,6 +170,16 @@ ${itemReqs.join(', ')}
       : countsText
   }
 
+  // Append TOS competencies to instructions when provided
+  const tosCompetencies = form.value.include_tos
+    ? tosCompetencyInputs.value.map(c => c.trim()).filter(Boolean)
+    : []
+
+  if (tosCompetencies.length > 0) {
+    const competenciesText = `\n\nTOS COMPETENCIES — Use these EXACT competencies as rows in the table_of_specification:\n${tosCompetencies.map((c, i) => `${i + 1}. ${c}`).join('\n')}`
+    finalCustomInstructions = (finalCustomInstructions || '') + competenciesText
+  }
+
   try {
     const result = await generateWorksheet({
       title: form.value.title.trim() || `Worksheet: ${form.value.topic}`,
@@ -161,7 +191,9 @@ ${itemReqs.join(', ')}
       target_competency: form.value.target_competency.trim() || undefined,
       custom_instructions: finalCustomInstructions || undefined,
       include_tos: form.value.include_tos,
-      reference_file: referenceFile.value
+      tos_competencies: tosCompetencies.length > 0 ? tosCompetencies : undefined,
+      reference_file: referenceFile.value,
+      ai_model: form.value.ai_model,
     })
 
     clearProgressSimulation()
@@ -283,7 +315,7 @@ const generationSteps = [
             <div class="space-y-2">
               <Label for="subject">Subject <span class="text-destructive">*</span></Label>
               <Select v-model="form.subject_id" @update:model-value="onSubjectChange">
-                <SelectTrigger id="subject">
+                <SelectTrigger id="subject" class="w-full">
                   <SelectValue placeholder="Select Subject" />
                 </SelectTrigger>
                 <SelectContent>
@@ -297,7 +329,7 @@ const generationSteps = [
             <div class="space-y-2">
               <Label for="grade">Grade Level <span class="text-destructive">*</span></Label>
               <Select v-model="form.grade_level_id">
-                <SelectTrigger id="grade">
+                <SelectTrigger id="grade" class="w-full">
                   <SelectValue placeholder="Select Grade" />
                 </SelectTrigger>
                 <SelectContent>
@@ -314,7 +346,7 @@ const generationSteps = [
             <div class="space-y-2">
               <Label for="term">School Term</Label>
               <Select v-model="form.term">
-                <SelectTrigger id="term">
+                <SelectTrigger id="term" class="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -328,7 +360,7 @@ const generationSteps = [
             <div class="space-y-2">
               <Label for="medium">Medium of Instruction</Label>
               <Select v-model="form.medium_of_instruction" @update:model-value="updateAutoTitle">
-                <SelectTrigger id="medium">
+                <SelectTrigger id="medium" class="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -367,7 +399,7 @@ const generationSteps = [
               </div>
               <div class="space-y-1.5">
                 <Label for="q_essay" class="text-xs text-muted-foreground font-medium">Essay</Label>
-                <Input id="q_essay" type="number" min="0" max="10" v-model="form.q_essay" class="h-9" />
+                <Input id="q_essay" type="number" min="0" max="20" v-model="form.q_essay" class="h-9" />
               </div>
             </div>
             <p class="text-[11px] text-muted-foreground">Leave at 0 if you do not want to include that question type.</p>
@@ -383,9 +415,11 @@ const generationSteps = [
             />
           </div>
 
-          <!-- Target Competency -->
-          <div class="space-y-2">
-            <Label for="competency">Target Learning Competency</Label>
+          <!-- Target Competency (hidden when TOS is checked — replaced by TOS competency inputs) -->
+          <div v-if="!form.include_tos" class="space-y-2">
+            <Label for="competency">
+              Target Learning Competency <span class="text-destructive">*</span>
+            </Label>
             <Textarea
               id="competency"
               v-model="form.target_competency"
@@ -393,18 +427,6 @@ const generationSteps = [
             />
           </div>
 
-          <!-- Custom Instructions -->
-          <div class="space-y-2">
-            <Label for="instructions">Instructions (Optional)</Label>
-            <Textarea
-              id="instructions"
-              v-model="form.custom_instructions"
-              rows="2"
-              placeholder="e.g. Include localized Filipino scenarios, add 2 word problems, keep questions suitable for beginner readers..."
-            />
-          </div>
-
-          <!-- Reference File Upload -->
           <div class="space-y-2 p-4 bg-muted/30 rounded-lg border">
             <Label for="referenceFile" class="text-base font-semibold flex items-center gap-2">
               <BookOpen class="h-4 w-4" />
@@ -423,14 +445,108 @@ const generationSteps = [
           </div>
 
           <!-- Include TOS Checkbox -->
-          <div class="flex items-center space-x-2 pt-2">
-            <Checkbox id="include_tos" :checked="form.include_tos" @update:checked="form.include_tos = $event" />
-            <label
-              for="include_tos"
-              class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-            >
+          <div
+            class="flex items-center space-x-2 pt-2 cursor-pointer select-none"
+            @click="onToggleTos(!form.include_tos)"
+          >
+            <Checkbox :checked="form.include_tos" />
+            <span class="text-sm font-medium leading-none">
               Include Table of Specification (TOS)
-            </label>
+            </span>
+          </div>
+
+          <!-- TOS Competencies (shown when include_tos is checked) -->
+          <div v-if="form.include_tos" class="space-y-3 p-4 bg-muted/30 rounded-lg border transition-all">
+            <div
+              v-for="(comp, index) in tosCompetencyInputs"
+              :key="index"
+              class="flex items-start gap-2"
+            >
+              <div class="flex-1 space-y-1.5">
+                <Label :for="`competency-${index}`" class="text-xs text-muted-foreground font-medium">
+                  Competency {{ index + 1 }}
+                </Label>
+                <Textarea
+                  :id="`competency-${index}`"
+                  v-model="tosCompetencyInputs[index]"
+                  rows="2"
+                />
+              </div>
+              <Button
+                v-if="tosCompetencyInputs.length > 1"
+                type="button"
+                variant="ghost"
+                size="icon"
+                class="h-8 w-8 mt-6 text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
+                @click="removeCompetency(index)"
+              >
+                <Minus class="h-4 w-4" />
+              </Button>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              class="h-8 gap-1.5 text-[13px] border-dashed font-normal w-full"
+              @click="addCompetency"
+            >
+              <Plus class="h-4 w-4" />
+              <span>Add Competency</span>
+            </Button>
+          </div>
+          <!-- AI Model Selector -->
+          <div class="space-y-2 p-4 rounded-lg border border-primary/20 bg-primary/5">
+            <Label class="text-sm font-semibold flex items-center gap-2">
+              <Sparkles class="h-4 w-4 text-primary" />
+              AI Model
+            </Label>
+            <p class="text-xs text-muted-foreground">Choose the AI model to generate your worksheet.</p>
+            <Select v-model="form.ai_model">
+              <SelectTrigger class="w-full bg-background">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <div class="px-2 py-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">OpenAI</div>
+                <SelectItem value="gpt-6-luna">
+                  <div class="flex flex-col py-0.5">
+                    <div class="flex items-center gap-2">
+                      <span class="font-medium">GPT-6 Luna</span>
+                      <span class="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-medium">Recommended</span>
+                    </div>
+                    <span class="text-[11px] text-muted-foreground mt-1">Cost: ₱5.70 Input / ₱28.50 Output per 1M tokens</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="gpt-5.6-luna">
+                  <div class="flex flex-col py-0.5">
+                    <span class="font-medium">GPT-5.6 Luna</span>
+                    <span class="text-[11px] text-muted-foreground mt-1">Cost: ₱11.40 Input / ₱68.40 Output per 1M tokens</span>
+                  </div>
+                </SelectItem>
+                <SelectSeparator />
+                <div class="px-2 py-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Google Gemini</div>
+                <SelectItem value="gemini-3.7-flash">
+                  <div class="flex flex-col py-0.5">
+                    <span class="font-medium">Gemini 3.7 Flash</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="gemini-3.6-flash">
+                  <div class="flex flex-col py-0.5">
+                    <span class="font-medium">Gemini 3.6 Flash</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="gemini-3.5-flash-lite">
+                  <div class="flex flex-col py-0.5">
+                    <span class="font-medium">Gemini 3.5 Flash Lite</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="gemini-3.1-flash-lite">
+                  <div class="flex flex-col py-0.5">
+                    <span class="font-medium">Gemini 3.1 Flash Lite</span>
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>

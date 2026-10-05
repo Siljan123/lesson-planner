@@ -1,10 +1,19 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { PlusCircle, ArrowUpDown, ArrowDown, ArrowUp, MoreHorizontal, Check, X, Shield, User as UserIcon, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from '@lucide/vue'
+import { PlusCircle, ArrowUpDown, ArrowDown, ArrowUp, MoreHorizontal, Check, X, Shield, User as UserIcon, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, Coins, Settings2, Plus } from '@lucide/vue'
+import AddTokensDialog from './AddTokensDialog.vue'
+import SetLimitDialog from './SetLimitDialog.vue'
 
 const props = defineProps<{
   data: Array<any>
 }>()
+
+const emit = defineEmits<{
+  (e: 'refresh'): void
+}>()
+
+const selectedUserForTokens = ref<any>(null)
+const selectedUserForLimit = ref<any>(null)
 
 const searchQuery = ref('')
 const roleFilter = ref<string[]>([])
@@ -83,13 +92,23 @@ const paginatedData = computed(() => {
 watch(pageSize, () => {
   currentPage.value = 1
 })
+
+
+
+const inviteDialogOpen = ref(false)
+
+function handleRefresh() {
+  emit('refresh')
+}
 </script>
 
 
 <template>
   <div class="space-y-4">
+    
     <!-- Toolbar -->
     <div class="flex items-center justify-between">
+      
       <div class="flex flex-1 items-center space-x-2">
         <Input 
           v-model="searchQuery" 
@@ -97,7 +116,6 @@ watch(pageSize, () => {
           class="h-8 w-[150px] lg:w-[250px]" 
         />
         
-        <!-- Role Filter (Popover) -->
         <Popover>
           <PopoverTrigger as-child>
             <Button variant="outline" size="sm" class="h-8 border-dashed">
@@ -138,6 +156,13 @@ watch(pageSize, () => {
         <Button v-if="hasFilters" variant="ghost" class="h-8 px-2 lg:px-3" @click="resetFilters">
           Reset
           <X class="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+      <div class="flex items-center space-x-2">
+        <Button @click="inviteDialogOpen = true"
+        variant="outline">
+          <Plus class="mr-2 h-4 w-4" />
+          Invite User
         </Button>
       </div>
     </div>
@@ -222,7 +247,10 @@ watch(pageSize, () => {
               </div>
             </TableCell>
             <TableCell class="text-right">
-              {{ user.total_tokens?.toLocaleString() || 0 }}
+              <div class="flex flex-col items-end">
+                <span class="font-medium">{{ user.total_tokens?.toLocaleString() || 0 }}</span>
+                <span class="text-xs text-muted-foreground">/ {{ user.token_limit?.toLocaleString() || '100,000' }}</span>
+              </div>
             </TableCell>
             <TableCell class="text-right text-muted-foreground">
               {{ new Date(user.created_at).toLocaleDateString() }}
@@ -235,8 +263,14 @@ watch(pageSize, () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem>Edit</DropdownMenuItem>
-                  <DropdownMenuItem class="text-destructive">Revoke Access</DropdownMenuItem>
+                  <DropdownMenuItem @click="selectedUserForTokens = user">
+                    <Coins class="w-4 h-4 mr-2" />
+                    Add Tokens
+                  </DropdownMenuItem>
+                  <DropdownMenuItem @click="selectedUserForLimit = user">
+                    <Settings2 class="w-4 h-4 mr-2" />
+                    Edit Limit
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </TableCell>
@@ -276,6 +310,26 @@ watch(pageSize, () => {
         </div>
       </div>
     </div>
+
+    <AddTokensDialog 
+      v-if="selectedUserForTokens" 
+      :user="selectedUserForTokens" 
+      @close="selectedUserForTokens = null" 
+      @success="emit('refresh'); selectedUserForTokens = null" 
+    />
+
+    <SetLimitDialog 
+      v-if="selectedUserForLimit" 
+      :user="selectedUserForLimit" 
+      @close="selectedUserForLimit = null" 
+      @success="emit('refresh'); selectedUserForLimit = null" 
+    />
   </div>
+
+  <InviteUserDialog 
+    v-model:open="inviteDialogOpen" 
+    @success="handleRefresh"
+  />
+  
 </template>
 

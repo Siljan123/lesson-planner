@@ -40,11 +40,11 @@ defineProps<{
   <div class="mt-8 grid min-h-160 gap-8 lg:grid-cols-[1.15fr_.85fr]">
     <!-- LEFT: Official DepEd DLL Document Table Template Preview -->
     <div class="rounded-md border flex flex-col min-h-160">
-      <div class="flex-1 overflow-auto rounded-md border bg-white p-5 text-black font-serif max-h-160">
+      <div class="flex-1 overflow-x-auto overflow-y-auto rounded-md border bg-white p-5 text-black font-serif max-h-160">
 
-        <table class="w-full border-collapse border border-black table-fixed text-[11px] leading-tight">
+        <table class="w-full border-collapse border border-black text-[11px] leading-tight min-w-[540px]">
           <tr>
-            <td class="border border-black p-2 w-40 font-bold bg-gray-50">Pangalan ng Aralin</td>
+            <td class="border border-black p-2 w-36 min-w-36 font-bold bg-gray-50">Pangalan ng Aralin</td>
             <td :colspan="parsedDays.length || 1" class="border border-black p-2 font-bold text-xs">
               {{ form.title || 'Untitled Lesson Plan' }}
             </td>
@@ -109,7 +109,7 @@ defineProps<{
           <!-- Session Headers for Intentions -->
           <tr v-if="parsedDays.length > 0">
             <td class="border border-black bg-gray-100 p-1 align-top"></td>
-            <td v-for="day in parsedDays" :key="'in_h_'+day" class="border border-black bg-gray-100 p-1 text-center font-bold uppercase text-[10px]">
+            <td v-for="day in parsedDays" :key="'in_h_'+day" class="border border-black bg-gray-100 p-1 text-center font-bold uppercase text-[10px] min-w-[130px]">
               {{ day }}
             </td>
           </tr>
@@ -133,7 +133,7 @@ defineProps<{
               Mga Layunin sa Pagkatuto:<br>
               <span class="text-[9px] font-normal text-gray-600">Mas maliliit na kaalaman, kasanayan, o gawain.</span>
             </td>
-            <td v-for="day in parsedDays" :key="`obj_${day}`" class="border border-black p-2 align-top">
+            <td v-for="day in parsedDays" :key="`obj_${day}`" class="border border-black p-2 align-top min-w-[130px]">
               <div class="space-y-1.5">
                 <div>
                   <span class="font-bold text-blue-900 block text-[10px]">Cognitive:</span>
@@ -182,7 +182,7 @@ defineProps<{
           <!-- Session Headers for Learning Experience -->
           <tr v-if="parsedDays.length > 0">
             <td class="border border-black bg-gray-100 p-1 align-top"></td>
-            <td v-for="day in parsedDays" :key="'le_h_'+day" class="border border-black bg-gray-100 p-1 text-center font-bold uppercase text-[10px]">
+            <td v-for="day in parsedDays" :key="'le_h_'+day" class="border border-black bg-gray-100 p-1 text-center font-bold uppercase text-[10px] min-w-[130px]">
               {{ day }}
             </td>
           </tr>
@@ -193,7 +193,7 @@ defineProps<{
               Bago ang Aralin:<br>
               <span class="text-[9px] font-normal text-gray-600">Paghahanda at balik-aral.</span>
             </td>
-            <td v-for="day in parsedDays" :key="'pre_'+day" class="border border-black p-2 align-top text-[10px]">
+            <td v-for="day in parsedDays" :key="'pre_'+day" class="border border-black p-2 align-top text-[10px] min-w-[130px]">
               <div v-if="generationStep >= 3" class="space-y-1">
                 <p class="font-semibold text-gray-900">• Panimulang Gawain & Balik-aral</p>
                 <p class="text-gray-700">Maikling pagganyak at pag-uugnay ng dating kaalaman sa {{ form.topic || form.title || 'bagong aralin' }}.</p>
@@ -211,7 +211,7 @@ defineProps<{
               Daloy ng Aralin:<br>
               <span class="text-[9px] font-normal text-gray-600">Mga gawain at interaksyon.</span>
             </td>
-            <td v-for="day in parsedDays" :key="'flow_'+day" class="border border-black p-2 align-top text-[10px]">
+            <td v-for="day in parsedDays" :key="'flow_'+day" class="border border-black p-2 align-top text-[10px] min-w-[130px]">
               <div v-if="generationStep >= 3" class="space-y-2">
                 <div class="border-b border-gray-200 pb-1">
                   <p class="font-bold text-primary">• Paglalahad at Pagtatalakay</p>
@@ -237,7 +237,7 @@ defineProps<{
             <td class="border border-black p-2 italic align-top font-semibold bg-gray-50">
               Mga Kagamitang Panturo:
             </td>
-            <td v-for="day in parsedDays" :key="'mat_'+day" class="border border-black p-2 align-top text-[10px] text-gray-700">
+            <td v-for="day in parsedDays" :key="'mat_'+day" class="border border-black p-2 align-top text-[10px] text-gray-700 min-w-[130px]">
               Tsart, mga larawan, activity sheets, at visual aids para sa {{ selectedSubjectName }}.
             </td>
           </tr>
@@ -247,7 +247,7 @@ defineProps<{
             <td class="border border-black p-2 italic align-top font-semibold bg-gray-50">
               Integrasyon:
             </td>
-            <td v-for="day in parsedDays" :key="'int_'+day" class="border border-black p-2 align-top text-[10px] text-gray-700">
+            <td v-for="day in parsedDays" :key="'int_'+day" class="border border-black p-2 align-top text-[10px] text-gray-700 min-w-[130px]">
               Wika, Edukasyon sa Pagpapakatao (GMRC), at Pang-araw-araw na Karanasan.
             </td>
           </tr>
@@ -265,7 +265,7 @@ defineProps<{
             <td class="border border-black p-2 italic align-top font-semibold bg-gray-50">
               Pormatibong Pagtataya:
             </td>
-            <td v-for="day in parsedDays" :key="'as_'+day" class="border border-black p-2 align-top text-[10px]">
+            <td v-for="day in parsedDays" :key="'as_'+day" class="border border-black p-2 align-top text-[10px] min-w-[130px]">
               <div v-if="generationStep >= 4">
                 <p class="font-bold text-gray-900">• Formative Evaluation</p>
                 <p class="text-gray-700 mt-0.5">Maikling pagtataya upang masukat ang masteri sa {{ form.title || 'aralin' }}.</p>

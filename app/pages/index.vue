@@ -17,6 +17,7 @@ import {
   CheckCircle,
   ArrowRight
 } from '@lucide/vue'
+import TableOfSpecificationStructure from '~/components/worksheet/TableOfSpecificationStructure.vue'
 
 definePageMeta({
   layout: 'guest'
@@ -72,12 +73,8 @@ const features = [
 
 <template>
   <div class="min-h-screen bg-background text-foreground flex flex-col selection:bg-primary/20 selection:text-primary">
-    <!-- Hero Section with Top Navigation -->
     <Hero />
-
-    <!-- Interactive Generation Process Preview (Live Simulation) -->
     <GenerationProcessPreview />
-    <!-- Landing Page Footer -->
     <LandingpageFooter />
   </div>
 </template>

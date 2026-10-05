@@ -24,7 +24,8 @@ export const ilawContentSchema = z.object({
       cognitive: z.string().optional(),
       psychomotor: z.string().optional(),
       affective: z.string().optional(),
-    })).optional()
+    })).optional(),
+    learner_context: z.string().optional(),
   }),
   learning_experience: z.object({
     instructional_materials: z.array(z.string()).default([]),
@@ -65,12 +66,21 @@ export const ilawContentSchema = z.object({
     }).optional()
   }),
   ways_forward: z.object({
+    extended_learning: z.string().optional(),
     reflection: z.object({
       learners_at_mastery: z.string().optional(),
       learners_requiring_remediation: z.string().optional(),
       effective_strategies: z.string().optional(),
       challenges_encountered: z.string().optional()
     }),
+    reflection_per_session: z.array(z.object({
+      day: z.string(),
+      objectives_achieved: z.boolean().nullable().optional(),
+      objectives_not_achieved_reason: z.string().optional(),
+      mastery_count: z.string().optional(),
+      total_count: z.string().optional(),
+      teacher_notes: z.string().optional(),
+    })).optional(),
     remediation: z.string().optional(),
     enrichment: z.string().optional()
   })

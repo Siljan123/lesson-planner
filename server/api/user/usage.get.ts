@@ -1,61 +1,50 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
+import type { Database } from '~~/shared/types/database.types'
 
 export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event)
   if (!user) throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
   const userId = (user as any).sub || user.id
   
-  const supabase = await serverSupabaseClient(event)
+  const supabase = await serverSupabaseClient<Database>(event)
   
-  // Get start of today (UTC)
-  const startOfDay = new Date()
-  startOfDay.setUTCHours(0,0,0,0)
+  const { data: quota, error } = await supabase
+    .from('user_token_quotas')
+    .select('*')
+    .eq('user_id', userId)
+    .single()
 
-  const { data: lessonPlans } = await supabase
-    .from('lesson_plans')
-    .select('ai_use_declaration')
-    .gte('created_at', startOfDay.toISOString())
-    .eq('owner_id', userId)
-
-  const { data: worksheets } = await supabase
-    .from('worksheets')
-    .select('ai_use_declaration')
-    .gte('created_at', startOfDay.toISOString())
-    .eq('owner_id', userId)
-
-  let usedTokens = 0
-  
-  const processData = (items: any[] | null) => {
-    if (!items) return
-    items.forEach(item => {
-      const declaration = item.ai_use_declaration
-      const tokenUsage = typeof declaration === 'object' && declaration !== null && !Array.isArray(declaration)
-        && 'token_usage' in declaration
-        ? (declaration as { token_usage?: { totalTokenCount?: string | number } }).token_usage
-        : undefined
-
-      const rawUsage = tokenUsage?.totalTokenCount
-      if (rawUsage !== undefined && rawUsage !== null) {
-        usedTokens += parseInt(String(rawUsage), 10)
-      }
-    })
+  if (error || !quota) {
+    // If not found, return default
+    const resetTime = new Date()
+    resetTime.setDate(resetTime.getDate() + 30)
+    return {
+      used: 0,
+      limit: 100000,
+      percentage: 0,
+      resetTime: resetTime.toISOString(),
+      isLimitReached: false,
+      daysUntilReset: 30
+    }
   }
 
-  processData(lessonPlans)
-  processData(worksheets)
+  const periodStart = new Date(quota.period_start_date)
+  const resetTime = new Date(periodStart)
+  resetTime.setDate(resetTime.getDate() + 30)
+  
+  const now = new Date()
+  const diffTime = resetTime.getTime() - now.getTime()
+  const daysUntilReset = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)))
 
-  // Define daily token limit per user
-  const DAILY_LIMIT = 200000 
-
-  // Reset time is start of next day (UTC)
-  const resetTime = new Date(startOfDay)
-  resetTime.setUTCDate(resetTime.getUTCDate() + 1)
+  const usedTokens = quota.tokens_used
+  const limit = quota.token_limit
 
   return {
     used: usedTokens,
-    limit: DAILY_LIMIT,
-    percentage: Math.min(100, Math.round((usedTokens / DAILY_LIMIT) * 100)),
+    limit: limit,
+    percentage: limit > 0 ? Math.min(100, Math.round((usedTokens / limit) * 100)) : 0,
     resetTime: resetTime.toISOString(),
-    isLimitReached: usedTokens >= DAILY_LIMIT
+    isLimitReached: usedTokens >= limit,
+    daysUntilReset
   }
 })

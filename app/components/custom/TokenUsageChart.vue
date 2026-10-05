@@ -9,7 +9,7 @@ interface DailyEntry {
 
 const props = defineProps<{
   history: DailyEntry[]
-  dailyLimit: number
+  monthlyLimit: number
 }>()
 
 // Chart dimensions
@@ -23,10 +23,14 @@ const paddingBottom = 40
 const drawWidth = chartWidth - paddingLeft - paddingRight
 const drawHeight = chartHeight - paddingTop - paddingBottom
 
+const dailyAverageTarget = computed(() => {
+  return Math.round(props.monthlyLimit / 30)
+})
+
 const maxValue = computed(() => {
   const maxTokens = Math.max(...props.history.map(d => d.tokens), 0)
-  // Ensure we show at least up to the daily limit
-  return Math.max(maxTokens * 1.1, props.dailyLimit * 1.05)
+  // Ensure we show at least up to the daily average
+  return Math.max(maxTokens * 1.1, dailyAverageTarget.value * 1.05)
 })
 
 const barWidth = computed(() => {
@@ -43,7 +47,7 @@ const bars = computed(() => {
     const x = paddingLeft + i * (barWidth.value + barGap)
     const y = paddingTop + drawHeight - height
 
-    const pct = (entry.tokens / props.dailyLimit) * 100
+    const pct = (entry.tokens / dailyAverageTarget.value) * 100
     let fill = '#22c55e' // green
     if (pct >= 90) fill = '#ef4444' // red
     else if (pct >= 70) fill = '#f59e0b' // amber
@@ -72,7 +76,7 @@ const bars = computed(() => {
 
 // Limit line Y position
 const limitLineY = computed(() => {
-  return paddingTop + drawHeight - (props.dailyLimit / maxValue.value) * drawHeight
+  return paddingTop + drawHeight - (dailyAverageTarget.value / maxValue.value) * drawHeight
 })
 
 // Y-axis tick values
@@ -91,6 +95,7 @@ const yTicks = computed(() => {
 })
 
 function formatTokens(n: number): string {
+  if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`
   if (n >= 1000) return `${(n / 1000).toFixed(1)}K`
   return String(n)
 }
@@ -126,7 +131,7 @@ function formatTokens(n: number): string {
         </text>
       </g>
 
-      <!-- Daily limit line -->
+      <!-- Daily average target line -->
       <line
         :x1="paddingLeft"
         :y1="limitLineY"
@@ -145,7 +150,7 @@ function formatTokens(n: number): string {
         font-size="9"
         font-weight="600"
       >
-        Daily Limit ({{ formatTokens(dailyLimit) }})
+        Avg Daily Target ({{ formatTokens(dailyAverageTarget) }})
       </text>
 
       <!-- Bars -->

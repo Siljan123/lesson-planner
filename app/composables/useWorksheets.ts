@@ -1,4 +1,5 @@
 import type { Worksheet } from '~/types/worksheet'
+import { toast } from 'vue-sonner'
 
 export const useWorksheets = () => {
   const fetchAll = async () => {
@@ -12,23 +13,29 @@ export const useWorksheets = () => {
   }
 
   const generateWorksheet = async (body: any) => {
-    return await $fetch<{ id: string; success: boolean }>('/api/worksheets/generate', {
+    const res = await $fetch<{ id: string; success: boolean }>('/api/worksheets/generate', {
       method: 'POST',
       body
     })
+    toast.success('Worksheet generated successfully!')
+    return res
   }
 
   const updateWorksheet = async (id: string, body: any) => {
-    return await $fetch<{ worksheet: Worksheet }>(`/api/worksheets/${id}`, {
+    const res = await $fetch<{ worksheet: Worksheet }>(`/api/worksheets/${id}`, {
       method: 'PUT',
       body
     })
+    toast.success('Worksheet updated successfully!')
+    return res
   }
 
   const deleteWorksheet = async (id: string) => {
-    return await $fetch(`/api/worksheets/${id}`, {
+    const res = await $fetch(`/api/worksheets/${id}`, {
       method: 'DELETE'
     })
+    toast.success('Worksheet deleted successfully!')
+    return res
   }
 
   const downloadExport = (id: string, title = 'worksheet', includeAnswerKey = true, exportType = 'both') => {

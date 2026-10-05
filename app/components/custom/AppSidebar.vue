@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { LayoutDashboard, FilePlus2, FileArchive, BookOpen, Gauge, AlertTriangle, Users2Icon } from '@lucide/vue'
+import { LayoutDashboard, FilePlus2, FileArchive, BookOpen, Gauge, AlertTriangle, Users2Icon, PhilippinePeso } from '@lucide/vue'
 import {
   Sidebar,
   SidebarContent,
@@ -23,6 +23,8 @@ const navItems = [
   { title: 'Dashboard', url: '/authenticated/dashboard', icon: LayoutDashboard },
   { title: 'Lesson Plans', url: '/authenticated/generated-lesson-plan', icon: FilePlus2 },
   { title: 'Worksheets', url: '/authenticated/worksheets', icon: BookOpen },
+  { title: 'Pricing', url: '/authenticated/pricing', icon: PhilippinePeso },
+  
 ]
 
 const adminItems = computed(() => {
@@ -32,7 +34,7 @@ const adminItems = computed(() => {
   ]
 })
 
-const { usage, percentUsed, remainingPlans, hoursUntilReset, isNearLimit, isLimitReached, usageColor, fetchUsage, startPolling } = useUsage()
+const { usage, percentUsed, remainingPlans, daysUntilReset, isNearLimit, isLimitReached, usageColor, fetchUsage, startPolling } = useUsage()
 
 onMounted(async () => {
   await fetchUsage().catch(() => {})
@@ -40,6 +42,7 @@ onMounted(async () => {
 })
 
 function formatTokens(n: number): string {
+  if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`
   if (n >= 1000) return `${(n / 1000).toFixed(1)}K`
   return String(n)
 }
@@ -138,7 +141,7 @@ const gaugeIconColor = computed(() => {
               <span class="text-xs font-medium text-foreground">API Usage</span>
             </div>
             <span class="text-[10px] text-muted-foreground">
-              Resets in {{ hoursUntilReset }}h
+              Resets in {{ daysUntilReset }}d
             </span>
           </div>
 
@@ -153,7 +156,7 @@ const gaugeIconColor = computed(() => {
             </div>
             <div class="flex items-center justify-between">
               <span class="text-[10px] text-muted-foreground">
-                {{ formatTokens(usage?.used ?? 0) }} / {{ formatTokens(usage?.limit ?? 50000) }}
+                {{ formatTokens(usage?.used ?? 0) }} / {{ formatTokens(usage?.limit ?? 100000) }}
               </span>
               <span class="text-[10px] text-muted-foreground">
                 {{ percentUsed }}%
@@ -162,16 +165,20 @@ const gaugeIconColor = computed(() => {
           </div>
 
           <!-- Remaining plans estimate -->
-          <div
-            class="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs"
-            :class="isLimitReached
-              ? 'bg-red-500/10 text-red-600 dark:text-red-400'
-              : isNearLimit
-                ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                : 'bg-muted text-muted-foreground'"
-          >
-            <AlertTriangle v-if="isLimitReached || isNearLimit" class="w-3 h-3 shrink-0" />
-            <span v-if="isLimitReached">Daily limit reached</span>
+          <div class="flex flex-col gap-1.5">
+            <div
+              class="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs"
+              :class="isLimitReached
+                ? 'bg-red-500/10 text-red-600 dark:text-red-400'
+                : isNearLimit
+                  ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                  : 'bg-muted text-muted-foreground'"
+            >
+              <AlertTriangle v-if="isLimitReached || isNearLimit" class="w-3 h-3 shrink-0" />
+              <span v-if="isLimitReached">Monthly limit reached</span>
+            </div>
+            
+            <RequestTokensDialog v-if="isLimitReached || isNearLimit" />
           </div>
         </div>
       </div>

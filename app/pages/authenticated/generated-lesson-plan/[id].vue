@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watchEffect } from "vue"
 import { useRoute, useRouter } from "vue-router"
+import { toast } from 'vue-sonner'
 import {
   ArrowLeft,
   Save,
@@ -64,7 +65,7 @@ const handleDelete = async () => {
       router.push('/authenticated/generated-lesson-plan')
     } catch (err) {
       console.error(err)
-      alert('Failed to delete lesson plan')
+      toast.error('Failed to delete lesson plan')
       isDeleting.value = false
     }
   }
@@ -195,7 +196,7 @@ const handleSave = async (summary = "Teacher manual edits saved") => {
     }, 3000)
     await refresh()
   } catch (err: any) {
-    alert(`Failed to save changes: ${err.message}`)
+    toast.error(`Failed to save changes: ${err.message}`)
   } finally {
     isSaving.value = false
   }
@@ -242,7 +243,7 @@ const executeExport = async (format: "docx" | "pptx") => {
 
     await refresh()
   } catch (err: any) {
-    alert(`Could not generate download file: ${err.message}`)
+    toast.error(`Could not generate download file: ${err.message}`)
   } finally {
     isExporting.value = false
   }
@@ -282,7 +283,7 @@ const executeRegenerateSection = async () => {
       await refresh()
     }
   } catch (err: any) {
-    alert(`Failed to regenerate: ${err?.data?.message || err.message || 'Unknown error'}`)
+    toast.error(`Failed to regenerate: ${err?.data?.message || err.message || 'Unknown error'}`)
   } finally {
     isRegeneratingSection.value = null
     targetSection.value = null
@@ -371,10 +372,10 @@ const addSession = () => {
     learning_resources: '',
     integration: '',
     phases: [
-      { phase: 'Engage / Motivation', teacher_activity: '', learner_activity: '' },
-      { phase: 'Explore / Presentation', teacher_activity: '', learner_activity: '' },
-      { phase: 'Experience / Discussion', teacher_activity: '', learner_activity: '' },
-      { phase: 'Empathize / Application', teacher_activity: '', learner_activity: '' }
+      { phase: 'I - Introduction', teacher_activity: '', learner_activity: '' },
+      { phase: 'L - Lesson Proper', teacher_activity: '', learner_activity: '' },
+      { phase: 'A - Application', teacher_activity: '', learner_activity: '' },
+      { phase: 'W - Wrap-up', teacher_activity: '', learner_activity: '' }
     ]
   })
 }
@@ -382,7 +383,7 @@ const addSession = () => {
 const removeSession = (index: number) => {
   if (!plan.value?.content.learning_experience.sessions) return
   if (plan.value.content.learning_experience.sessions.length <= 1) {
-    alert('The lesson plan must contain at least one day/session.')
+    toast.warning('The lesson plan must contain at least one day/session.')
     return
   }
   const sessionDay = plan.value.content.learning_experience.sessions[index]?.day
@@ -460,7 +461,7 @@ const triggerPrint = () => {
               <span class="font-medium text-xs">Section I: Intentions</span>
             </DropdownMenuItem>
             <DropdownMenuItem @click="openRegenerateSection('learning_experience')">
-              <span class="font-medium text-xs">Section II: Learning Experience</span>
+              <span class="font-medium text-xs">Section II: Learning Experience (Daloy ng Aralin)</span>
             </DropdownMenuItem>
             <DropdownMenuItem @click="openRegenerateSection('assessing_learning')">
               <span class="font-medium text-xs">Section III: Assessment</span>
@@ -484,18 +485,6 @@ const triggerPrint = () => {
           <span class="hidden sm:inline">Delete</span>
         </Button>
 
-        <!-- Print Button -->
-        <Button
-          size="sm"
-          variant="outline"
-          class="gap-1.5 font-semibold"
-          @click="triggerPrint"
-        >
-          <Printer class="size-3.5" />
-          <span class="hidden sm:inline">Print Landscape</span>
-        </Button>
-
-        <!-- Export Dropdown - Direct export -->
         <DropdownMenu>
           <DropdownMenuTrigger as-child>
             <Button size="sm" :disabled="isExporting" class="gap-1.5 font-semibold">
@@ -706,8 +695,19 @@ const triggerPrint = () => {
           <!-- Daloy ng Aralin (Procedures) -->
           <tr v-if="normalizedSessions.length > 0" class="lp-row">
             <td class="lp-cell lp-label-cell align-top">
-              <span class="text-gray-700">{{ isEnglishPlan ? 'Lesson Flow' : 'Daloy ng Aralin' }}</span>
-              <span class="block text-[11px] font-normal text-gray-400 mt-0.5 leading-tight">{{ isEnglishPlan ? 'Describe the instructional activities to be implemented across sessions.' : 'Ilarawan ang mga gawain na maaari mong ipatupad sa mga sesyon.' }}</span>
+              <div class="flex items-center justify-between gap-1">
+                <span class="text-gray-700 font-semibold">{{ isEnglishPlan ? 'Lesson Flow' : 'Daloy ng Aralin' }}</span>
+                <button
+                  type="button"
+                  class="text-[10px] text-primary hover:underline font-normal inline-flex items-center gap-0.5 print:hidden cursor-pointer"
+                  @click="openRegenerateSection('learning_experience')"
+                  title="Regenerate Daloy ng Aralin & Flow Discussion"
+                >
+                  <RotateCw class="size-2.5" />
+                  <span>Regenerate</span>
+                </button>
+              </div>
+              <span class="block text-[11px] font-normal text-gray-400 mt-0.5 leading-tight">{{ isEnglishPlan ? 'Describe instructional activities, teaching script, and flow discussion.' : 'Ilarawan ang daloy ng aralin, pagtatalakay, at mga gawain sa mga sesyon.' }}</span>
             </td>
             <td v-for="(session, sIdx) in normalizedSessions" :key="'le_d_'+sIdx" class="lp-cell lp-content-cell p-3 align-top">
               <div v-for="(phase, pIdx) in session.phases" :key="pIdx" class="mb-4 pb-3 border-b border-gray-100 last:border-0 last:pb-0 last:mb-0 relative group">

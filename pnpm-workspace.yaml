@@ -1,6 +1,9 @@
 packages:
   - '.'
 allowBuilds:
+  '@google/genai': true
   '@google/genai protobufjs': true
+  core-js: true
   esbuild: true
+  protobufjs: true
   vue-demi: true

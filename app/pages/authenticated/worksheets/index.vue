@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useAsyncData } from '#imports'
+import { toast } from 'vue-sonner'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -25,7 +26,8 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
-  ChevronsRight
+  ChevronsRight,
+  Search
 } from '@lucide/vue'
 import {
   DropdownMenu,
@@ -162,7 +164,7 @@ async function handleDelete(ws: Worksheet) {
     await refresh()
   } catch (err) {
     console.error('Failed to delete worksheet:', err)
-    alert('Failed to delete worksheet')
+    toast.error('Failed to delete worksheet')
   } finally {
     isDeleting.value = null
   }
@@ -200,14 +202,14 @@ function formatDate(dateStr: string) {
     <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
       <div class="flex flex-wrap items-center gap-2">
         <div class="relative w-full sm:w-auto flex-1 min-w-[150px]">
+          <Search class="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
           <Input
             v-model="search"
-            class="h-8 w-full sm:w-44 text-[13px] border-border rounded-md bg-transparent placeholder:text-muted-foreground focus:ring-0 focus:border-border"
-            placeholder="Filter worksheets..."
+            class="h-8 w-full sm:w-44 pl-8 text-[13px] border-border rounded-md bg-transparent placeholder:text-muted-foreground focus:ring-0 focus:border-border"
+            placeholder="Search..."
           />
         </div>
 
-        <!-- Status Filter -->
         <DropdownMenu>
           <DropdownMenuTrigger as-child>
             <Button variant="outline" size="sm" class="h-8 gap-1.5 text-[13px] border-dashed font-normal shrink-0">

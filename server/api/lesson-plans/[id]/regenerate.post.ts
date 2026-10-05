@@ -59,7 +59,13 @@ export default defineEventHandler(async (event) => {
     (plan.ai_use_declaration as any)?.medium_of_instruction ||
     'Filipino'
   const targetSection = body.section || 'all'
-  const customInstructions = body.custom_instructions
+  let customInstructions = body.custom_instructions
+
+  // If regenerating Learning Experience / Daloy ng Aralin, boost the prompt with flow instructions
+  if (targetSection === 'learning_experience' || targetSection === 'daloy_ng_aralin') {
+    const flowBooster = 'Dramatically enhance Daloy ng Aralin and Flow Discussion: Provide comprehensive, detailed subject-matter teaching script in teacher_activity (minimum 100-150 words for Phase 2 Lesson Proper). Phase 2 must feature clear concept tables, rules, or formulas, and guided modeling. Phase 2 (L - Lesson Proper) must include deep conceptual explanation, 4-5 tiered probing discussion questions with expected learner answers, and error analysis/misconception handling. Learner activity must describe active, specific responses.'
+    customInstructions = customInstructions ? `${customInstructions}\n${flowBooster}` : flowBooster
+  }
 
   // 3. Call LLM generateILAW
   const result = await generateILAW({
@@ -72,7 +78,7 @@ export default defineEventHandler(async (event) => {
     content_standard: contentStandard,
     performance_standard: performanceStandard,
     medium_of_instruction: mediumOfInstruction,
-    section_to_regenerate: targetSection === 'all' ? undefined : targetSection,
+    section_to_regenerate: targetSection === 'all' ? undefined : (targetSection === 'daloy_ng_aralin' ? 'learning_experience' : targetSection),
     custom_instructions: customInstructions,
     existing_plan: existingContent,
   })
@@ -95,7 +101,7 @@ export default defineEventHandler(async (event) => {
         topic
       }
     }
-  } else if (targetSection === 'learning_experience') {
+  } else if (targetSection === 'learning_experience' || targetSection === 'daloy_ng_aralin') {
     mergedContent = {
       ...existingContent,
       learning_experience: newContent.learning_experience
@@ -154,12 +160,12 @@ export default defineEventHandler(async (event) => {
     content: mergedContent,
     updated_at: new Date().toISOString(),
     ai_use_declaration: {
-      tool: 'Gemini 3.6 Flash',
+      tool: result.modelLabel || 'Gemini Flash',
       medium_of_instruction: mediumOfInstruction,
       sections_ai_assisted:
         targetSection === 'all'
           ? ['Intentions', 'Learning Experience', 'Assessing Learning', 'Ways Forward']
-          : [targetSection],
+          : [targetSection === 'learning_experience' || targetSection === 'daloy_ng_aralin' ? 'Learning Experience (Daloy ng Aralin)' : targetSection],
       teacher_verified: false,
       token_usage: result.usage
     }

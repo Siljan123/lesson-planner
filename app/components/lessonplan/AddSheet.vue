@@ -10,6 +10,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem, SelectSe
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger, SheetFooter, SheetClose } from '@/components/ui/sheet'
 import { CheckCircle2, Loader2, Plus, PlusCircle, Sparkles, X, AlertCircle } from '@lucide/vue'
 import GeneratingPreview from '@/components/lessonplan/GeneratingPreview.vue'
+import { toast } from 'vue-sonner'
 
 const router = useRouter()
 
@@ -138,7 +139,8 @@ const form = ref({
   checked_by_name: '',
   checked_by_position_id: '',
   checked_by_2_name: '',
-  checked_by_2_position_id: ''
+  checked_by_2_position_id: '',
+  ai_model: 'gpt-6-luna' as 'gpt-6-luna' | 'gpt-5.6-luna' | 'gemini-3.7-flash' | 'gemini-3.6-flash' | 'gemini-3.5-flash-lite' | 'gemini-3.1-flash-lite'
 })
 
 const sessionOption = ref('Day 1')
@@ -149,6 +151,16 @@ const resolvedSessionDuration = computed(() => {
     return customSessionDuration.value.trim() || 'Day 1'
   }
   return sessionOption.value
+})
+
+const isHeavySession = computed(() => {
+  return resolvedSessionDuration.value.split(',').length >= 3
+})
+
+watch(isHeavySession, (isHeavy) => {
+  if (isHeavy) {
+    form.value.ai_model = 'gemini-3.1-flash-lite'
+  }
 })
 
 const selectedSubjectName = computed(() => {
@@ -238,7 +250,7 @@ async function onSubmit() {
   } catch (error: any) {
     console.error('Failed to generate lesson plan', error)
     const msg = error?.data?.message || error?.message || 'Unknown error'
-    alert('Failed to generate lesson plan: ' + msg)
+    toast.error('Failed to generate lesson plan: ' + msg)
   } finally {
     stopProgressSimulation()
     isGenerating.value = false
@@ -254,7 +266,7 @@ async function onSubmit() {
         <span>New</span>
       </Button>
     </SheetTrigger>
-    <SheetContent class="sm:max-w-4xl overflow-y-auto p-8">
+    <SheetContent class="sm:max-w-7xl overflow-y-auto p-8">
       <div class="flex items-center gap-2 border-b py-4">
         <PlusCircle class="size-7 text-primary" /> <h1 class="text-sm font-semibold font-mono">Daily Log Lesson</h1> 
       </div>
@@ -277,7 +289,7 @@ async function onSubmit() {
         </div>
         
         <div class="grid sm:grid-cols-3 gap-3">
-          <div class="space-y-2 min-w-xs">
+          <div class="space-y-2">
             <div class="flex items-center justify-between">
               <Label>Subject</Label>
             </div>
@@ -350,7 +362,7 @@ async function onSubmit() {
 
             <!-- Subject Select -->
             <Select v-else v-model="form.subject_id" required @update:model-value="onSubjectChange">
-              <SelectTrigger>
+              <SelectTrigger class="w-full">
                 <SelectValue placeholder="Select subject" />
               </SelectTrigger>
               <SelectContent>
@@ -367,10 +379,10 @@ async function onSubmit() {
               </SelectContent>
             </Select>
           </div>
-          <div class="space-y-2 min-w-xs">
+          <div class="space-y-2">
             <Label>Grade Level</Label>
             <Select v-model="form.grade_level_id" required>
-              <SelectTrigger>
+              <SelectTrigger class="w-full">
                 <SelectValue placeholder="Select grade" />
               </SelectTrigger>
               <SelectContent>
@@ -380,10 +392,10 @@ async function onSubmit() {
               </SelectContent>
             </Select>
           </div>
-          <div class="space-y-2 min-w-xs">
+          <div class="space-y-2">
             <Label>Term</Label>
             <Select v-model="form.term" required>
-              <SelectTrigger>
+              <SelectTrigger class="w-full">
                 <SelectValue placeholder="Select term" />
               </SelectTrigger>
               <SelectContent>
@@ -417,16 +429,15 @@ async function onSubmit() {
           <div class="space-y-2">
             <Label for="session_duration">Number of Days / Sessions</Label>
             <Select v-model="sessionOption">
-              <SelectTrigger id="session_duration">
+              <SelectTrigger id="session_duration" class="w-full">
                 <SelectValue placeholder="Select session days" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Day 1">1 Day (Day 1)</SelectItem>
-                <SelectItem value="Day 1, Day 2">2 Days (Day 1, Day 2)</SelectItem>
-                <SelectItem value="Day 1, Day 2, Day 3">3 Days (Day 1 to Day 3)</SelectItem>
-                <SelectItem value="Day 1, Day 2, Day 3, Day 4">4 Days (Day 1 to Day 4)</SelectItem>
-                <SelectItem value="Day 1, Day 2, Day 3, Day 4, Day 5">5 Days (Day 1 to Day 5)</SelectItem>
-                <SelectItem value="custom">Custom...</SelectItem>
+                <SelectItem value="Day 1">1 </SelectItem>
+                <SelectItem value="Day 1, Day 2">2</SelectItem>
+                <SelectItem value="Day 1, Day 2, Day 3">3</SelectItem>
+                <SelectItem value="Day 1, Day 2, Day 3, Day 4">4</SelectItem>
+                <SelectItem value="Day 1, Day 2, Day 3, Day 4, Day 5">5</SelectItem>
               </SelectContent>
             </Select>
             <Input
@@ -439,7 +450,7 @@ async function onSubmit() {
           <div class="space-y-2">
             <Label>Medium of Instruction</Label>
             <Select v-model="form.medium_of_instruction">
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger class="w-full"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="English">English</SelectItem>
                 <SelectItem value="Filipino">Filipino / Tagalog</SelectItem>
@@ -499,6 +510,69 @@ async function onSubmit() {
               </SelectContent>
             </Select>
           </div>
+        </div>
+
+        <!-- AI Model Selector -->
+        <div class="space-y-2 p-4 rounded-lg border border-primary/20 bg-primary/5">
+          <Label class="text-sm font-semibold flex items-center gap-2">
+            <Sparkles class="size-4 text-primary" />
+            AI Model
+          </Label>
+          <p class="text-xs text-muted-foreground">Choose the AI model to generate your lesson plan.</p>
+          
+          <div v-if="isHeavySession" class="bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 text-xs p-3 rounded flex gap-2 items-start mb-2">
+            <AlertCircle class="w-4 h-4 shrink-0 mt-0.5" />
+            <p>For 3-5 day session, only <strong>Gemini 3.1 Flash Lite</strong> is available. Generating this massive amount of text causes heavier models to time out or hit strict rate limits.</p>
+          </div>
+
+          <Select v-model="form.ai_model">
+            <SelectTrigger class="w-full bg-background">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <div v-if="!isHeavySession">
+                <div class="px-2 py-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">OpenAI</div>
+                <SelectItem value="gpt-6-luna">
+                  <div class="flex flex-col py-0.5">
+                    <div class="flex items-center gap-2">
+                      <span class="font-medium">GPT-6 Luna</span>
+                      <span class="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-medium">Recommended</span>
+                    </div>
+                    <span class="text-[11px] text-muted-foreground mt-1">Cost: ₱5.70 Input / ₱28.50 Output per 1M tokens</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="gpt-5.6-luna">
+                  <div class="flex flex-col py-0.5">
+                    <span class="font-medium">GPT-5.6 Luna</span>
+                    <span class="text-[11px] text-muted-foreground mt-1">Cost: ₱11.40 Input / ₱68.40 Output per 1M tokens</span>
+                  </div>
+                </SelectItem>
+                <SelectSeparator />
+              </div>
+              <div class="px-2 py-1.5 text-[10px] gap-4 font-semibold text-muted-foreground uppercase tracking-wider">Google Gemini <Badge size="xs" class="ml-4">Free</Badge></div>
+              <SelectItem v-if="!isHeavySession" value="gemini-3.7-flash">
+                <div class="flex flex-col py-0.5">
+                  <span class="font-medium">Gemini 3.7 Flash</span>
+                  
+                </div>
+              </SelectItem>
+              <SelectItem v-if="!isHeavySession" value="gemini-3.6-flash">
+                <div class="flex flex-col py-0.5">
+                  <span class="font-medium">Gemini 3.6 Flash</span>
+                </div>
+              </SelectItem>
+              <SelectItem v-if="!isHeavySession" value="gemini-3.5-flash-lite">
+                <div class="flex flex-col py-0.5">
+                  <span class="font-medium">Gemini 3.5 Flash Lite</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="gemini-3.1-flash-lite">
+                <div class="flex flex-col py-0.5">
+                  <span class="font-medium">Gemini 3.1 Flash Lite</span>
+                </div>
+              </SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
        
