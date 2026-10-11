@@ -106,7 +106,7 @@ async function submitSet() {
           </div>
           
           <div class="pt-4 flex items-center gap-2">
-            <Input 
+            <input 
               type="number" 
               v-model="selectedAmount" 
               class="flex-1"

@@ -65,7 +65,7 @@ async function submitAdd() {
 
 <template>
   <Dialog v-model:open="isOpen">
-    <DialogContent class="sm:max-w-[425px]">
+    <DialogContent class="sm:max-w-106.25">
       <DialogHeader>
         <DialogTitle>Add Tokens</DialogTitle>
         <DialogDescription>
