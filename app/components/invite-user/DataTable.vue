@@ -23,6 +23,14 @@ const currentPage = ref(1)
 const pageSizeStr = ref('10')
 const pageSize = computed(() => parseInt(pageSizeStr.value))
 
+const sortOptions = [
+  { value: 'full_name', label: 'Name' },
+  { value: 'role', label: 'Role' },
+  { value: 'document_count', label: 'Documents' },
+  { value: 'total_tokens', label: 'Tokens' },
+  { value: 'created_at', label: 'Date Added' },
+]
+
 const hasFilters = computed(() => searchQuery.value.length > 0 || roleFilter.value.length > 0)
 
 function resetFilters() {
@@ -54,16 +62,18 @@ function toggleSort(column: string) {
   }
 }
 
+function toggleSortOrder() {
+  sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
+}
+
 const filteredData = computed(() => {
   return props.data.filter(user => {
-    // Search filter
     if (searchQuery.value) {
       const query = searchQuery.value.toLowerCase()
       if (!user.full_name?.toLowerCase().includes(query) && !user.email?.toLowerCase().includes(query)) {
         return false
       }
     }
-    // Role filter
     if (roleFilter.value.length > 0 && !roleFilter.value.includes(user.role)) {
       return false
     }
@@ -72,11 +82,11 @@ const filteredData = computed(() => {
     if (!sortColumn.value) return 0
     const valA = a[sortColumn.value] ?? ''
     const valB = b[sortColumn.value] ?? ''
-    
+
     let result = 0
     if (valA < valB) result = -1
     else if (valA > valB) result = 1
-    
+
     return sortOrder.value === 'asc' ? result : -result
   })
 })
@@ -93,7 +103,9 @@ watch(pageSize, () => {
   currentPage.value = 1
 })
 
-
+watch(searchQuery, () => {
+  currentPage.value = 1
+})
 
 const inviteDialogOpen = ref(false)
 
@@ -102,20 +114,19 @@ function handleRefresh() {
 }
 </script>
 
-
 <template>
   <div class="space-y-4">
-    
+
     <!-- Toolbar -->
-    <div class="flex items-center justify-between">
-      
-      <div class="flex flex-1 items-center space-x-2">
-        <Input 
-          v-model="searchQuery" 
-          placeholder="Search users..." 
-          class="h-8 w-[150px] lg:w-[250px]" 
+    <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+
+      <div class="flex flex-1 flex-wrap items-center gap-2">
+        <Input
+          v-model="searchQuery"
+          placeholder="Search users..."
+          class="h-8 w-full sm:w-[200px] lg:w-[250px]"
         />
-        
+
         <Popover>
           <PopoverTrigger as-child>
             <Button variant="outline" size="sm" class="h-8 border-dashed">
@@ -135,9 +146,9 @@ function handleRefresh() {
               <CommandList>
                 <CommandEmpty>No results found.</CommandEmpty>
                 <CommandGroup>
-                  <CommandItem 
-                    v-for="role in ['admin', 'teacher']" 
-                    :key="role" 
+                  <CommandItem
+                    v-for="role in ['admin', 'teacher']"
+                    :key="role"
                     :value="role"
                     @select="toggleRoleFilter(role)"
                   >
@@ -153,26 +164,119 @@ function handleRefresh() {
           </PopoverContent>
         </Popover>
 
-        <Button v-if="hasFilters" variant="ghost" class="h-8 px-2 lg:px-3" @click="resetFilters">
+        <!-- Mobile sort (table headers handle this on md+) -->
+        <div class="flex items-center gap-1 md:hidden">
+          <Select v-model="sortColumn">
+            <SelectTrigger class="h-8 w-[130px]">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem v-for="opt in sortOptions" :key="opt.value" :value="opt.value">
+                {{ opt.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+          <Button variant="outline" size="sm" class="h-8 w-8 p-0" aria-label="Toggle sort order" @click="toggleSortOrder">
+            <ArrowDown v-if="sortOrder === 'desc'" class="h-4 w-4" />
+            <ArrowUp v-else class="h-4 w-4" />
+          </Button>
+        </div>
+
+        <Button v-if="hasFilters" variant="ghost" size="sm" class="h-8 px-2 lg:px-3" @click="resetFilters">
           Reset
           <X class="ml-2 h-4 w-4" />
         </Button>
       </div>
-      <div class="flex items-center space-x-2">
-        <Button @click="inviteDialogOpen = true"
-        variant="outline">
+
+      <div class="flex items-center">
+        <Button class="w-full sm:w-auto" variant="outline" @click="inviteDialogOpen = true">
           <Plus class="mr-2 h-4 w-4" />
           Invite User
         </Button>
       </div>
     </div>
 
-    <!-- Table -->
-    <div class="rounded-md border border-border bg-card">
+    <!-- Mobile: card list -->
+    <div class="space-y-3 md:hidden">
+      <div
+        v-for="user in paginatedData"
+        :key="user.id"
+        class="rounded-md border border-border bg-card p-4"
+      >
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0">
+            <p class="truncate font-medium">{{ user.full_name }}</p>
+            <p class="truncate text-sm text-muted-foreground">{{ user.email }}</p>
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger as-child>
+              <Button variant="ghost" class="-mr-2 -mt-1 h-8 w-8 shrink-0 p-0" aria-label="Open actions">
+                <MoreHorizontal class="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem @click="selectedUserForTokens = user">
+                <Coins class="mr-2 h-4 w-4" />
+                Add Tokens
+              </DropdownMenuItem>
+              <DropdownMenuItem @click="selectedUserForLimit = user">
+                <Settings2 class="mr-2 h-4 w-4" />
+                Edit Limit
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        <dl class="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+          <div>
+            <dt class="text-xs text-muted-foreground">Role</dt>
+            <dd class="mt-0.5 flex items-center gap-2">
+              <Shield v-if="user.role === 'admin'" class="h-4 w-4 text-muted-foreground" />
+              <UserIcon v-else class="h-4 w-4 text-muted-foreground" />
+              <span class="capitalize">{{ user.role }}</span>
+            </dd>
+          </div>
+          <div>
+            <dt class="text-xs text-muted-foreground">School ID</dt>
+            <dd class="mt-0.5">{{ user.school_id || '-' }}</dd>
+          </div>
+          <div>
+            <dt class="text-xs text-muted-foreground">Documents</dt>
+            <dd class="mt-0.5">
+              <span class="font-medium">{{ user.document_count || 0 }}</span>
+              <span v-if="user.document_kinds" class="block truncate text-xs text-muted-foreground" :title="user.document_kinds">
+                {{ user.document_kinds }}
+              </span>
+            </dd>
+          </div>
+          <div>
+            <dt class="text-xs text-muted-foreground">Tokens</dt>
+            <dd class="mt-0.5">
+              <span class="font-medium">{{ user.total_tokens?.toLocaleString() || 0 }}</span>
+              <span class="text-xs text-muted-foreground"> / {{ user.token_limit?.toLocaleString() || '100,000' }}</span>
+            </dd>
+          </div>
+          <div class="col-span-2">
+            <dt class="text-xs text-muted-foreground">Date Added</dt>
+            <dd class="mt-0.5 text-muted-foreground">{{ new Date(user.created_at).toLocaleDateString() }}</dd>
+          </div>
+        </dl>
+      </div>
+
+      <div
+        v-if="paginatedData.length === 0"
+        class="flex h-24 items-center justify-center rounded-md border border-border bg-card text-sm text-muted-foreground"
+      >
+        No results.
+      </div>
+    </div>
+
+    <!-- Desktop: table -->
+    <div class="hidden rounded-md border border-border bg-card md:block">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead class="w-[300px]">
+            <TableHead class="min-w-[220px]">
               <Button variant="ghost" size="sm" class="-ml-3 h-8" @click="toggleSort('full_name')">
                 <span>Name & Email</span>
                 <ArrowDown v-if="sortColumn === 'full_name' && sortOrder === 'desc'" class="ml-2 h-4 w-4" />
@@ -188,7 +292,7 @@ function handleRefresh() {
                 <ArrowUpDown v-else class="ml-2 h-4 w-4" />
               </Button>
             </TableHead>
-            <TableHead>School ID</TableHead>
+            <TableHead class="hidden lg:table-cell">School ID</TableHead>
             <TableHead>
               <Button variant="ghost" size="sm" class="-ml-3 h-8" @click="toggleSort('document_count')">
                 <span>Documents</span>
@@ -207,7 +311,7 @@ function handleRefresh() {
                 </Button>
               </div>
             </TableHead>
-            <TableHead class="text-right">
+            <TableHead class="hidden text-right lg:table-cell">
               <div class="flex justify-end">
                 <Button variant="ghost" size="sm" class="-mr-3 h-8" @click="toggleSort('created_at')">
                   <span>Date Added</span>
@@ -235,13 +339,13 @@ function handleRefresh() {
                 <span class="capitalize">{{ user.role }}</span>
               </div>
             </TableCell>
-            <TableCell>
+            <TableCell class="hidden lg:table-cell">
               {{ user.school_id || '-' }}
             </TableCell>
             <TableCell>
               <div class="flex flex-col">
                 <span class="font-medium">{{ user.document_count || 0 }}</span>
-                <span v-if="user.document_kinds" class="text-xs text-muted-foreground truncate max-w-[150px]" :title="user.document_kinds">
+                <span v-if="user.document_kinds" class="max-w-[150px] truncate text-xs text-muted-foreground" :title="user.document_kinds">
                   {{ user.document_kinds }}
                 </span>
               </div>
@@ -252,23 +356,23 @@ function handleRefresh() {
                 <span class="text-xs text-muted-foreground">/ {{ user.token_limit?.toLocaleString() || '100,000' }}</span>
               </div>
             </TableCell>
-            <TableCell class="text-right text-muted-foreground">
+            <TableCell class="hidden text-right text-muted-foreground lg:table-cell">
               {{ new Date(user.created_at).toLocaleDateString() }}
             </TableCell>
             <TableCell>
               <DropdownMenu>
                 <DropdownMenuTrigger as-child>
-                  <Button variant="ghost" class="h-8 w-8 p-0">
+                  <Button variant="ghost" class="h-8 w-8 p-0" aria-label="Open actions">
                     <MoreHorizontal class="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem @click="selectedUserForTokens = user">
-                    <Coins class="w-4 h-4 mr-2" />
+                    <Coins class="mr-2 h-4 w-4" />
                     Add Tokens
                   </DropdownMenuItem>
                   <DropdownMenuItem @click="selectedUserForLimit = user">
-                    <Settings2 class="w-4 h-4 mr-2" />
+                    <Settings2 class="mr-2 h-4 w-4" />
                     Edit Limit
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -285,11 +389,11 @@ function handleRefresh() {
     </div>
 
     <!-- Pagination -->
-    <div class="flex items-center justify-between px-2">
-      <div class="text-sm text-muted-foreground">
+    <div class="flex flex-col gap-4 px-2 sm:flex-row sm:items-center sm:justify-between">
+      <div class="text-center text-sm text-muted-foreground sm:text-left">
         Showing {{ filteredData.length > 0 ? (currentPage - 1) * pageSize + 1 : 0 }} to {{ Math.min(currentPage * pageSize, filteredData.length) }} of {{ filteredData.length }} users.
       </div>
-      <div class="flex items-center space-x-6 lg:space-x-8">
+      <div class="flex flex-col items-center gap-3 sm:flex-row sm:gap-6 lg:gap-8">
         <div class="flex items-center space-x-2">
           <p class="text-sm font-medium">Rows per page</p>
           <Select v-model="pageSizeStr">
@@ -299,37 +403,37 @@ function handleRefresh() {
             </SelectContent>
           </Select>
         </div>
-        <div class="flex w-[100px] items-center justify-center text-sm font-medium">
-          Page {{ currentPage }} of {{ totalPages || 1 }}
-        </div>
-        <div class="flex items-center space-x-2">
-          <Button variant="outline" class="h-8 w-8 p-0" :disabled="currentPage === 1" @click="currentPage = 1"><ChevronsLeft class="h-4 w-4" /></Button>
-          <Button variant="outline" class="h-8 w-8 p-0" :disabled="currentPage === 1" @click="currentPage--"><ChevronLeft class="h-4 w-4" /></Button>
-          <Button variant="outline" class="h-8 w-8 p-0" :disabled="currentPage === totalPages || totalPages === 0" @click="currentPage++"><ChevronRight class="h-4 w-4" /></Button>
-          <Button variant="outline" class="h-8 w-8 p-0" :disabled="currentPage === totalPages || totalPages === 0" @click="currentPage = totalPages"><ChevronsRight class="h-4 w-4" /></Button>
+        <div class="flex items-center gap-4">
+          <div class="flex min-w-[100px] items-center justify-center text-sm font-medium">
+            Page {{ currentPage }} of {{ totalPages || 1 }}
+          </div>
+          <div class="flex items-center space-x-2">
+            <Button variant="outline" class="hidden h-8 w-8 p-0 sm:flex" aria-label="First page" :disabled="currentPage === 1" @click="currentPage = 1"><ChevronsLeft class="h-4 w-4" /></Button>
+            <Button variant="outline" class="h-8 w-8 p-0" aria-label="Previous page" :disabled="currentPage === 1" @click="currentPage--"><ChevronLeft class="h-4 w-4" /></Button>
+            <Button variant="outline" class="h-8 w-8 p-0" aria-label="Next page" :disabled="currentPage === totalPages || totalPages === 0" @click="currentPage++"><ChevronRight class="h-4 w-4" /></Button>
+            <Button variant="outline" class="hidden h-8 w-8 p-0 sm:flex" aria-label="Last page" :disabled="currentPage === totalPages || totalPages === 0" @click="currentPage = totalPages"><ChevronsRight class="h-4 w-4" /></Button>
+          </div>
         </div>
       </div>
     </div>
 
-    <AddTokensDialog 
-      v-if="selectedUserForTokens" 
-      :user="selectedUserForTokens" 
-      @close="selectedUserForTokens = null" 
-      @success="emit('refresh'); selectedUserForTokens = null" 
+    <AddTokensDialog
+      v-if="selectedUserForTokens"
+      :user="selectedUserForTokens"
+      @close="selectedUserForTokens = null"
+      @success="emit('refresh'); selectedUserForTokens = null"
     />
 
-    <SetLimitDialog 
-      v-if="selectedUserForLimit" 
-      :user="selectedUserForLimit" 
-      @close="selectedUserForLimit = null" 
-      @success="emit('refresh'); selectedUserForLimit = null" 
+    <SetLimitDialog
+      v-if="selectedUserForLimit"
+      :user="selectedUserForLimit"
+      @close="selectedUserForLimit = null"
+      @success="emit('refresh'); selectedUserForLimit = null"
+    />
+
+    <InviteUserDialog
+      v-model:open="inviteDialogOpen"
+      @success="handleRefresh"
     />
   </div>
-
-  <InviteUserDialog 
-    v-model:open="inviteDialogOpen" 
-    @success="handleRefresh"
-  />
-  
 </template>
-
